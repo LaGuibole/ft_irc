@@ -23,7 +23,10 @@ SRCS        := \
 	srcs/main.cpp \
 	srcs/server/Server.cpp \
 	srcs/client/Client.cpp \
-	srcs/channel/Channel.cpp 
+	srcs/channel/Channel.cpp \
+	srcs/server/CommandParser.cpp \
+	srcs/server/ChannelManager.cpp \
+	srcs/server/Utils.cpp
 OBJS        := $(SRCS:$(SRC_DIR)/%.cpp=$(OBJ_DIR)/%.o)
 
 # OS DETECTION (MAC / LINUX)
