@@ -3,10 +3,10 @@
 #                                                         :::      ::::::::    #
 #    Makefile                                           :+:      :+:    :+:    #
 #                                                     +:+ +:+         +:+      #
-#    By: guphilip <guphilip@student.42.fr>          +#+  +:+       +#+         #
+#    By: david <david@student.42.fr>                +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2025/06/16 20:28:22 by guillaumeph       #+#    #+#              #
-#    Updated: 2025/07/08 15:08:07 by guphilip         ###   ########.fr        #
+#    Updated: 2025/07/09 01:46:11 by david            ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -14,13 +14,19 @@
 #                                 Makefile Portable                            #
 # **************************************************************************** #
 
-NAME        := ft_irc
+NAME        := ircserv
 SRC_DIR     := srcs
 OBJ_DIR     := build
 INC_DIR     := includes
 
 SRCS        := \
-	srcs/main.cpp
+	srcs/main.cpp \
+	srcs/server/Server.cpp \
+	srcs/client/Client.cpp \
+	srcs/channel/Channel.cpp \
+	srcs/server/CommandParser.cpp \
+	srcs/server/ChannelManager.cpp \
+	srcs/server/Utils.cpp
 OBJS        := $(SRCS:$(SRC_DIR)/%.cpp=$(OBJ_DIR)/%.o)
 
 # OS DETECTION (MAC / LINUX)
@@ -32,7 +38,7 @@ else
 endif
 
 CXX         := c++
-CXXFLAGS    := -Wall -Wextra -Werror -std=c++98 -I$(INC_DIR)
+CXXFLAGS    := -Wall -Wextra -Werror -std=c++98 -I. -I$(INC_DIR) -Isrcs/includes -Isrcs/server/includes
 
 # ----------------------------------------------------------------------------- #
 
@@ -41,11 +47,12 @@ all: $(NAME)
 $(NAME): $(OBJS)
 	$(CXX) $(CXXFLAGS) $(OBJS) -o $(NAME)
 
-$(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp | $(OBJ_DIR)
+$(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp #| $(OBJ_DIR)
+	mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
-$(OBJ_DIR):
-	mkdir -p $(OBJ_DIR)
+#$(OBJ_DIR):
+#	mkdir -p $(OBJ_DIR)
 
 clean:
 	rm -rf $(OBJ_DIR)
