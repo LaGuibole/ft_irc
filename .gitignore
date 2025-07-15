@@ -3,3 +3,4 @@
 .DStore
 *.o
 *.txt
+Makefile
