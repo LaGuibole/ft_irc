@@ -1,5 +1,5 @@
-#include "../includes/Client.hpp"
-#include "../includes/Numerics.hpp"
+#include "Client.hpp"
+#include "Numerics.hpp"
 #include <iostream>
 #include <unistd.h> // Pour close
 #include <arpa/inet.h> // Pour inet_ntop

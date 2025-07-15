@@ -64,7 +64,7 @@ void CommandParser::process(int clientFd, const std::string& command,
             handlePrivmsg(client, command, clients, channelManager);
         else if (cmd == "QUIT")
             handleQuit(client, command, channelManager);
-        // Ici faudra ajouter  d'autres else if pour TOPIC, MODE, KICK, INVITE
+        // Ici faudra ajouter  d'autres else if pour TOPIC, MODE, KICK, INVITE | JONAS & GUIGUI
         else
             client->reply(":localhost " + std::string(ERR_UNKNOWNCOMMAND) + " " + cmd + " :Unknown command");
     } else
@@ -249,5 +249,6 @@ void CommandParser::handleQuit(Client* client, const std::string& command, Chann
     std::string message = getMessage(command);
     std::string quitMsg = ":" + client->getPrefix() + " QUIT :" + (message.empty() ? "Quit" : message);
     // A add un Broadcast ici pour plus tard
+    client->reply(":localhost quit.");
     channelManager.removeClientFromAll(client);
 }

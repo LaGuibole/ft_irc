@@ -3,7 +3,7 @@
 
 #include <map>
 #include <string>
-#include "../../includes/Channel.hpp"
+#include "Channel.hpp"
 
 /**
  * @brief Manager pour créer et gérer channels

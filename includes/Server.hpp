@@ -5,7 +5,7 @@
 #include <map>
 #include <string>
 #include <poll.h>
-#include "../../includes/Client.hpp"
+#include "Client.hpp"
 #include "ChannelManager.hpp"
 #include "CommandParser.hpp"
 

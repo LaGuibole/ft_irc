@@ -3,10 +3,10 @@
 #                                                         :::      ::::::::    #
 #    Makefile                                           :+:      :+:    :+:    #
 #                                                     +:+ +:+         +:+      #
-#    By: david <david@student.42.fr>                +#+  +:+       +#+         #
+#    By: guphilip <guphilip@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2025/06/16 20:28:22 by guillaumeph       #+#    #+#              #
-#    Updated: 2025/07/09 01:46:11 by david            ###   ########.fr        #
+#    Updated: 2025/07/15 15:09:37 by guphilip         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -20,12 +20,13 @@ OBJ_DIR     := build
 INC_DIR     := includes
 
 SRCS        := \
-	srcs/main.cpp \
-	srcs/server/Server.cpp \
-	srcs/client/Client.cpp \
 	srcs/channel/Channel.cpp \
-	srcs/server/CommandParser.cpp \
+	srcs/client/Client.cpp \
+	srcs/fehwfhewuo.cpp \
+	srcs/main.cpp \
 	srcs/server/ChannelManager.cpp \
+	srcs/server/CommandParser.cpp \
+	srcs/server/Server.cpp \
 	srcs/server/Utils.cpp
 OBJS        := $(SRCS:$(SRC_DIR)/%.cpp=$(OBJ_DIR)/%.o)
 
@@ -38,7 +39,7 @@ else
 endif
 
 CXX         := c++
-CXXFLAGS    := -Wall -Wextra -Werror -std=c++98 -I. -I$(INC_DIR) -Isrcs/includes -Isrcs/server/includes
+CXXFLAGS    := -std=c++98 -I. -I$(INC_DIR) -Isrcs/includes -Isrcs/server/includes
 
 # ----------------------------------------------------------------------------- #
 

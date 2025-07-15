@@ -4,9 +4,9 @@
 #include <string>
 #include <vector>
 #include <map>
-#include "../../includes/Client.hpp"
+#include "Client.hpp"
 #include "ChannelManager.hpp"
-#include "../../includes/Numerics.hpp"
+#include "Numerics.hpp"
 
 /**
  * @brief Classe pour parser et traiter les commandes
