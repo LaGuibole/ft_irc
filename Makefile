@@ -22,7 +22,6 @@ INC_DIR     := includes
 SRCS        := \
 	srcs/channel/Channel.cpp \
 	srcs/client/Client.cpp \
-	srcs/fehwfhewuo.cpp \
 	srcs/main.cpp \
 	srcs/server/ChannelManager.cpp \
 	srcs/server/CommandParser.cpp \

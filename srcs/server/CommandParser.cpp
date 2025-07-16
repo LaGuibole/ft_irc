@@ -62,6 +62,8 @@ void CommandParser::process(int clientFd, const std::string& command,
             handlePart(client, params, channelManager);
         else if (cmd == "PRIVMSG")
             handlePrivmsg(client, command, clients, channelManager);
+		else if (cmd == "INVITE")
+			handleInvite(client, params, clients, channelManager);
         else if (cmd == "QUIT")
             handleQuit(client, command, channelManager);
         // Ici faudra ajouter  d'autres else if pour TOPIC, MODE, KICK, INVITE | JONAS & GUIGUI
@@ -251,4 +253,33 @@ void CommandParser::handleQuit(Client* client, const std::string& command, Chann
     // A add un Broadcast ici pour plus tard
     client->reply(":localhost quit.");
     channelManager.removeClientFromAll(client);
+}
+
+void CommandParser::handleInvite(Client* client, std::vector<std::string>& args, const std::map<int, Client*>& clients, ChannelManager& channelManager) {
+	if (args.size() != 2) {
+		std::cout << "Need 2 args\n";
+		return;
+	}
+
+	Client* target = NULL;
+	for (std::map<int, Client*>::const_iterator it = clients.begin(); it != clients.end(); ++it) {
+		if (it->second->getNickname() == args[0]) {
+			target = it->second;
+			break;
+		}
+	}
+	if (!target) {
+		client->reply("Target client not found\n");
+		return;
+	}
+	Channel* channel = channelManager.getChannel("#" + args[1]);
+	if (!channel) {
+		client->reply("Channel doesn't exist\n");
+		return;
+	}
+	else if (channel->isMember(client)) {
+		client->reply("You need to be a channel member to invite other users !\n");
+		return;
+	}
+	target->reply("Je t'invite a rejoindre le salon: #" + args[1]);
 }
