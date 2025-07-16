@@ -1,29 +1,26 @@
 #include "Server.hpp"
 #include <iostream>
-#include <string>
 #include <stdexcept>
-#include <vector>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <unistd.h>
 #include <fcntl.h>
-#include <arpa/inet.h>
-#include <poll.h>
+#include <cstring>
+#include <cerrno>
+#include "../includes/Numerics.hpp"
 
-Server::Server(int port, const std::string& password) 
-    : _port(port), _password(password), _server_fd(-1) {}
+Server* Server::_instance = NULL;
+
+Server::Server(int port, const std::string& password)
+    : _port(port), _password(password), _serverFileDescriptor(-1),
+      _channelManager(), _running(true)
+{
+    setInstance(this);
+}
 
 Server::~Server()
 {
-    for (std::map<int, Client*>::iterator it = _clients.begin(); it != _clients.end(); ++it)
-	{
-        close(it->first);
-        delete it->second;
-    }
-    for (std::map<std::string, Channel*>::iterator it = _channels.begin(); it != _channels.end(); ++it)
-        delete it->second;
-    if (_server_fd != -1)
-        close(_server_fd);
+    shutdown();
     std::cout << "Server shut down." << std::endl;
 }
 
@@ -33,61 +30,154 @@ void Server::start()
     mainLoop();
 }
 
-void Server::init() {} // Bientot
-
 void Server::setupServerSocket()
 {
-    _server_fd = socket(AF_INET, SOCK_STREAM, 0);
-    if (_server_fd < 0)
-		throw std::runtime_error("Failed to create socket");
+    _serverFileDescriptor = socket(AF_INET, SOCK_STREAM, 0);
+    if (_serverFileDescriptor < 0)
+        throw std::runtime_error("Socket creation failed");
+
     int opt = 1;
-    if (setsockopt(_server_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0)
-        throw std::runtime_error("Failed to set socket options");
-    if (fcntl(_server_fd, F_SETFL, O_NONBLOCK) < 0)
-        throw std::runtime_error("Failed to set socket to non-blocking");
+    setsockopt(_serverFileDescriptor, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
+    fcntl(_serverFileDescriptor, F_SETFL, O_NONBLOCK);
 
-    struct sockaddr_in server_addr;
-    server_addr.sin_family = AF_INET;
-    server_addr.sin_addr.s_addr = INADDR_ANY;
-    server_addr.sin_port = htons(_port);
+    struct sockaddr_in addr;
+    memset(&addr, 0, sizeof(addr));
+    addr.sin_family = AF_INET;
+    addr.sin_addr.s_addr = INADDR_ANY;
+    addr.sin_port = htons(_port);
 
-    if (bind(_server_fd, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0)
-        throw std::runtime_error("Failed to bind socket");
-    if (listen(_server_fd, SOMAXCONN) < 0)
-        throw std::runtime_error("Failed to listen on socket");
-    struct pollfd server_poll_fd;
-    server_poll_fd.fd = _server_fd;
-    server_poll_fd.events = POLLIN;
-    _poll_fds.push_back(server_poll_fd);
+    if (bind(_serverFileDescriptor, (struct sockaddr*)&addr, sizeof(addr)) < 0)
+        throw std::runtime_error("Bind failed");
+    if (listen(_serverFileDescriptor, SOMAXCONN) < 0)
+        throw std::runtime_error("Listen failed");
+
+    struct pollfd pfd;
+    pfd.fd = _serverFileDescriptor;
+    pfd.events = POLLIN;
+    pfd.revents = 0;
+    _pollFds.push_back(pfd);
+
     std::cout << "Server listening on port " << _port << "..." << std::endl;
 }
 
 void Server::mainLoop()
 {
-    while (true)
-	{
-        int poll_count = poll(&_poll_fds[0], _poll_fds.size(), -1);
-        if (poll_count < 0)
-			throw std::runtime_error("Poll error");
-        for (size_t i = 0; i < _poll_fds.size(); ++i)
-		{
-            if (_poll_fds[i].revents & POLLIN)
-			{
-                if (_poll_fds[i].fd == _server_fd)
+    while (_running)
+    {
+        for (size_t i = 0; i < _pollFds.size(); ++i)
+            _pollFds[i].revents = 0;
+
+        int pollCount = poll(&_pollFds[0], _pollFds.size(), 1000);
+        if (pollCount < 0)
+        {
+            if (errno == EINTR)
+            {
+                if (!_running)
+                    break;
+                continue;
+            }
+            throw std::runtime_error("Poll error");
+        }
+        for (size_t i = 0; i < _pollFds.size(); ++i)
+        {
+            if (_pollFds[i].revents & POLLIN)
+            {
+                if (_pollFds[i].fd == _serverFileDescriptor)
+                {
                     handleNewConnection();
-                else
-                    handleClientData(_poll_fds[i].fd);
+                } else {
+                    handleClientData(_pollFds[i].fd);
+                }
             }
         }
     }
+    shutdown();
 }
 
 void Server::handleNewConnection()
 {
-    std::cout << "New connection attempt..." << std::endl;
+    struct sockaddr_in clientAddr;
+    socklen_t addrLen = sizeof(clientAddr);
+    memset(&clientAddr, 0, sizeof(clientAddr));
+
+    int clientFd = accept(_serverFileDescriptor, (struct sockaddr*)&clientAddr, &addrLen);
+    if (clientFd < 0)
+    {
+        std::cerr << "Accept failed" << std::endl;
+        return;
+    }
+    fcntl(clientFd, F_SETFL, O_NONBLOCK);
+
+    Client* newClient = new Client(clientFd, clientAddr);
+    _clients[clientFd] = newClient;
+
+    struct pollfd pfd;
+    pfd.fd = clientFd;
+    pfd.events = POLLIN;
+    pfd.revents = 0;
+    _pollFds.push_back(pfd);
+
+    std::cout << "New connection accepted: fd " << clientFd << std::endl;
 }
 
-void Server::handleClientData(int client_fd)
+void Server::handleClientData(int clientFd)
 {
-    std::cout << "Data received from client " << client_fd << std::endl;
+    char buffer[1024];
+    memset(buffer, 0, sizeof(buffer));
+    ssize_t bytesRead = recv(clientFd, buffer, sizeof(buffer) - 1, 0);
+    if (bytesRead <= 0)
+    {
+        if (bytesRead == 0)
+            std::cout << "Client " << clientFd << " disconnected" << std::endl;
+        else
+            std::cerr << "Recv error for " << clientFd << std::endl;
+        removeClient(clientFd);
+        return;
+    }
+    Client* client = _clients[clientFd];
+    if (client)
+        client->appendToBuffer(std::string(buffer));
+    std::string& buf = client->getBuffer();
+    size_t pos = 0;
+    while ((pos = buf.find("\r\n")) != std::string::npos)
+    {
+        std::string command = buf.substr(0, pos);
+        CommandParser::process(clientFd, command, _clients, _channelManager, _password);
+        client->eraseFromBuffer(0, pos + 2);
+    }
+}
+
+void Server::removeClient(int clientFd)
+{
+    std::map<int, Client*>::iterator it = _clients.find(clientFd);
+    if (it == _clients.end())
+        return;
+    Client* client = it->second;
+    _channelManager.removeClientFromAll(client);
+    close(clientFd);
+    for (std::vector<struct pollfd>::iterator pIt = _pollFds.begin(); pIt != _pollFds.end(); ++pIt)
+    {
+        if (pIt->fd == clientFd)
+        {
+            _pollFds.erase(pIt);
+            break;
+        }
+    }
+    delete client;
+    _clients.erase(it);
+
+    std::cout << "Client disconnected. fd: " << clientFd << std::endl;
+}
+
+void Server::shutdown()
+{
+    for (std::map<int, Client*>::iterator it = _clients.begin(); it != _clients.end(); )
+    {
+        int fd = it->first;
+        ++it;
+        removeClient(fd);
+    }
+    if (_serverFileDescriptor != -1)
+        close(_serverFileDescriptor);
+    std::cout << "Server shutting down cleanly." << std::endl;
 }

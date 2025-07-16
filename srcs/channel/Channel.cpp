@@ -1,7 +1,6 @@
 #include "Channel.hpp"
 #include <iostream>
 
-// Est appelé par Server lorsqu'un client rejoint un canal qui n'existe pas encore.
 Channel::Channel(const std::string& name) : _name(name), _topic("")
 {
     std::cout << "New channel created: " << this->_name << std::endl;
@@ -12,75 +11,56 @@ Channel::~Channel()
     std::cout << "Canal " << this->_name << " destroyed :'( ." << std::endl;
 }
 
-const std::string& Channel::getName() const
+std::vector<Client*> Channel::getMembers() const
 {
-    return this->_name;
+    std::vector<Client*> members;
+    for (std::map<int, Client*>::const_iterator it = _members.begin(); it != _members.end(); ++it)
+        members.push_back(it->second);
+    return members;
 }
 
-const std::string& Channel::getTopic() const
+bool Channel::isMember(Client* client) const
 {
-    return this->_topic;
+    if (!client)
+        return false;
+    return _members.find(client->getFileDescriptor()) != _members.end();
 }
 
-void Channel::setTopic(const std::string& topic)
+void Channel::addMember(Client* client)
 {
-    this->_topic = topic;
-}
-
-/**
- * @brief Ajoute un client au canal.
- * * Si le canal est vide, le premier client devient automatiquement opérateur.
- * @param client Pointeur vers l'objet Client à ajouter.
- */
-void Channel::addClient(Client* client)
-{
-    if (client == NULL)
+    if (!client || isMember(client))
         return;
-    _clients[client->getFd()] = client;
-    if (_clients.size() == 1)
-        _operators[client->getFd()] = client;
-    std::cout << "Client " << client->getNickname() << " join the chat " << _name << std::endl;
+    _members[client->getFileDescriptor()] = client;
+    if (_members.size() == 1)
+        _operators[client->getFileDescriptor()] = client;
+    std::cout << "Client " << client->getNickname() << " joined " << _name << std::endl;
 }
 
-/**
- * @brief Retire un client du canal.
- * @param client Pointeur vers l'objet Client à retirer.
- */
-void Channel::removeClient(Client* client)
+void Channel::removeMember(Client* client)
 {
-    if (client == NULL)
+    if (!client || !isMember(client))
         return;
-    _clients.erase(client->getFd());
-    _operators.erase(client->getFd());
-    std::cout << "Client " << client->getNickname() << " left the chat " << _name << std::endl;
+    _members.erase(client->getFileDescriptor());
+    _operators.erase(client->getFileDescriptor());
+    std::cout << "Client " << client->getNickname() << " left " << _name << std::endl;
 }
 
-/**
- * @brief Diffuse un message à tous les membres du canal.
- * @param message Le message à envoyer.
- * @param exclude_client Le client qui a envoyé le message original (pour ne pas le lui renvoyer).
- */
-void Channel::broadcast(const std::string& message, Client* exclude_client)
+void Channel::broadcast(const std::string& message, Client* exclude)
 {
-    for (std::map<int, Client*>::iterator it = _clients.begin(); it != _clients.end(); ++it)
+    for (std::map<int, Client*>::iterator it = _members.begin(); it != _members.end(); ++it)
     {
-        Client* current_client = it->second;
-        if (current_client != exclude_client)
+        Client* current = it->second;
+        if (current != exclude)
         {
-            current_client->reply(message);
-            std::cout << "DEBUG >> BroadCast sended in :" << _name << std::endl;
+            current->reply(message);
+            std::cout << "Broadcast sent in " << _name << std::endl;
         }
     }
 }
 
-/**
- * @brief Vérifie si un client est un opérateur du canal.
- * @param client Le client à vérifier.
- * @return true si le client est opérateur, false sinon.
- */
-bool Channel::isOperator(Client* client)
+bool Channel::isOperator(Client* client) const
 {
-    if (client == NULL)
+    if (!client)
         return false;
-    return _operators.find(client->getFd()) != _operators.end();
+    return _operators.find(client->getFileDescriptor()) != _operators.end();
 }
