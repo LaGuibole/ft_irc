@@ -16,6 +16,14 @@ class Channel {
         std::map<int, Client*> _members;    /** Membres du channel */
         std::map<int, Client*> _operators;  /** Opérateurs du channel */
 
+        // FOR MODE CMDS :
+        bool _inviteOnly;
+        bool _topicRestricted;
+        std::string _password;
+        bool _hasPassword;
+        size_t _userLimit;
+        bool _hasUserLimit;
+
     public:
          Channel(const std::string& name);
         ~Channel();
@@ -23,6 +31,7 @@ class Channel {
         const std::string& getName() const { return _name; }
         const std::string& getTopic() const { return _topic; }
         std::vector<Client*> getMembers() const;
+        std::string getModeString() const;
         Client* getMemberByNickname(const std::string& nickname) const;
 
         /**
@@ -49,7 +58,7 @@ class Channel {
          *
          */
         void removeOperator(Client* client);
-        
+
         /**
          * @brief Add un client au channel
          * @param client Client à add

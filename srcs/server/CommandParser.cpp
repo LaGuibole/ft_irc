@@ -66,6 +66,8 @@ void CommandParser::process(int clientFd, const std::string& command,
             handleQuit(client, command, channelManager);
         else if (cmd == "KICK")
             handleKick(client, params, channelManager);
+        else if (cmd == "MODE")
+            handleMode(client, params, channelManager);
         // Ici faudra ajouter  d'autres else if pour TOPIC, MODE, KICK, INVITE | JONAS & GUIGUI
         else
             client->reply(":localhost " + std::string(ERR_UNKNOWNCOMMAND) + " " + cmd + " :Unknown command");
@@ -306,6 +308,58 @@ void CommandParser::handleKick(Client* client, const std::vector<std::string>& p
     channel->removeMember(target); // kicks target from channel
 }
 
+void CommandParser::applyChannelMode(Client* client, Channel* channel, const std::string& modeFlags, std::vector<std::string>& modeParams)
+{
+    bool adding = true;
+    size_t paramIndex = 0;
+
+    for (size_t i = 0; i < modeFlags.size(); ++i)
+    {
+        char mode = modeFlags[i];
+
+        if (mode == '+')
+        {
+            adding = true;
+            continue;
+        }
+        else if (mode == '-')
+        {
+            adding = false;
+            continue;
+        }
+
+        switch (mode)
+        {
+            case 'o':
+            {
+                if (paramIndex >= modeParams.size())
+                {
+                    client->reply(":localhost " + std::string(ERR_NEEDMOREPARAMS) + " MODE: Missing parameters for mode o");
+                    return;
+                }
+                std::string targetNick = modeParams[paramIndex++];
+                Client* target = channel->getMemberByNickname(targetNick);
+                if (!target)
+                {
+                    client->reply(":localhost " + std::string(ERR_USERNOTINCHANNEL) + " " + targetNick + " " + channel->getName() + " :They aren't on that channel");
+                    return ;
+                }
+                if (adding)
+                    channel->addOperator(target);
+                else
+                    channel->removeOperator(target);
+
+                std::string modeMsg = ":" + client->getPrefix() + " MODE " + channel->getName() + " " + (adding ? "+o " : "-o ") + targetNick;
+                channel->broadcast(modeMsg);
+                break;
+            }
+            default:
+                client->reply(":localhost " + std::string(ERR_UNKNOWNMODE) + " " + mode + " :is not a supported mode (yet)");
+                break;
+        }
+    }
+}
+
 void CommandParser::handleMode(Client* client, const std::vector<std::string>& params, ChannelManager& channelManager)
 {
     if (params.empty())
@@ -338,7 +392,23 @@ void CommandParser::handleMode(Client* client, const std::vector<std::string>& p
 
     if (params.size() == 1)
     {
-        std::string modeLine = channel->getModeString(); // to do
-        client->reply(":localhost " + std::string(RPL_CHANNELMODEIS))
+        std::string modeLine = channel->getModeString();
+        client->reply(":localhost " + std::string(RPL_CHANNELMODEIS) + " " + client->getNickname() + " " + target + " " + modeLine);
+        return ;
     }
+
+    if (!channel->isOperator(client))
+    {
+        client->reply(":localhost " + std::string(ERR_CHANOPRIVSNEEDED) + " " + target + " :You're not channel operator");
+        return ;
+    }
+
+    const std::string& modeFlags = params[1];
+    std::vector<std::string> modeParams(params.begin() + 2, params.end());
+
+    for (size_t i = 0; i < modeParams.size(); ++i)
+        std::cout << " [" << modeParams[i] << "]";
+    std::cout << std::endl;
+
+    applyChannelMode(client, channel, modeFlags, modeParams);
 }

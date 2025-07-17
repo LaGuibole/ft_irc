@@ -21,6 +21,7 @@ class CommandParser {
     private:
         static std::vector<std::string> split(const std::string& str, char delimiter);
         static std::string getMessage(const std::string& command);
+        static void applyChannelMode(Client* client, Channel* channel, const std::string& modeFlags, std::vector<std::string>& modeParams);
 
         // Handlers pour commandes
         static void handlePass(Client* client, const std::vector<std::string>& params, const std::string& password);

@@ -35,6 +35,7 @@ class ChannelManager {
          * @param client Iencli à tej
          */
         void removeClientFromAll(Client* client);
+        
 };
 
 #endif

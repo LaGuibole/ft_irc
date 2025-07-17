@@ -1,5 +1,6 @@
 #include "Channel.hpp"
 #include <iostream>
+#include <sstream>
 
 Channel::Channel(const std::string& name) : _name(name), _topic("")
 {
@@ -87,4 +88,29 @@ bool Channel::isOperator(Client* client) const
     if (!client)
         return false;
     return _operators.find(client->getFileDescriptor()) != _operators.end();
+}
+
+std::string Channel::getModeString() const
+{
+    std::string flags = "+";
+    std::string params;
+
+    if (_inviteOnly)
+        flags += "i";
+    if (_topicRestricted)
+        flags += "t";
+    if (_hasPassword)
+    {
+        flags += "k";
+        params += " " + _password;
+    }
+    if (_hasUserLimit)
+    {
+        flags += "l";
+        std::ostringstream oss;
+        oss << " " << _userLimit;
+        params += oss.str();
+    }
+
+    return flags + params;
 }
