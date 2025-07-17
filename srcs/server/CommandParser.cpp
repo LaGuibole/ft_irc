@@ -56,6 +56,7 @@ void CommandParser::process(int clientFd, const std::string& command,
     else if (cmd == "USER")
         handleUser(client, command);
     else if (client->isRegistered()) {
+        std::cout << client->getNickname() << " called " << cmd << std::endl; // debug
         if (cmd == "JOIN")
             handleJoin(client, params, channelManager);
         else if (cmd == "PART")
