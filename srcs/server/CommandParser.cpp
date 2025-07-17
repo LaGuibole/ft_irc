@@ -256,10 +256,12 @@ void CommandParser::handleQuit(Client* client, const std::string& command, Chann
 }
 
 void CommandParser::handleInvite(Client* client, std::vector<std::string>& args, const std::map<int, Client*>& clients, ChannelManager& channelManager) {
-	if (args.size() != 2) {
-		std::cout << "Need 2 args\n";
+	if (args.size() < 2) {
+		client->reply(":localhost " + std::string(ERR_NEEDMOREPARAMS) + " PRIVMSG :Not enough parameters");
 		return;
 	}
+    std::string channel_name = args[1];
+    if (channel_name[0] != '#')
 
 	Client* target = NULL;
 	for (std::map<int, Client*>::const_iterator it = clients.begin(); it != clients.end(); ++it) {
@@ -269,17 +271,13 @@ void CommandParser::handleInvite(Client* client, std::vector<std::string>& args,
 		}
 	}
 	if (!target) {
-		client->reply("Target client not found\n");
+		client->reply(":localhost " + std::string(ERR_NOSUCHNICK) + " " + args[0] + " :No such nick");
 		return;
 	}
 	Channel* channel = channelManager.getChannel("#" + args[1]);
-	if (!channel) {
-		client->reply("Channel doesn't exist\n");
+	if (channel && !channel->isMember(client)) {
+		client->reply(":localhost " + std::string(ERR_NOTONCHANNEL) + " " + " :you are not a member of this channel: "  + channel_name);
 		return;
 	}
-	else if (channel->isMember(client)) {
-		client->reply("You need to be a channel member to invite other users !\n");
-		return;
-	}
-	target->reply("Je t'invite a rejoindre le salon: #" + args[1]);
+	target->reply(":" + client->getHostname() + " INVITE " + target->getNickname() + args[1]);
 }
