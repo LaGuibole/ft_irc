@@ -1,0 +1,66 @@
+#include "Channel.hpp"
+#include <iostream>
+
+Channel::Channel(const std::string& name) : _name(name), _topic("")
+{
+    std::cout << "New channel created: " << this->_name << std::endl;
+}
+
+Channel::~Channel()
+{
+    std::cout << "Canal " << this->_name << " destroyed :'( ." << std::endl;
+}
+
+std::vector<Client*> Channel::getMembers() const
+{
+    std::vector<Client*> members;
+    for (std::map<int, Client*>::const_iterator it = _members.begin(); it != _members.end(); ++it)
+        members.push_back(it->second);
+    return members;
+}
+
+bool Channel::isMember(Client* client) const
+{
+    if (!client)
+        return false;
+    return _members.find(client->getFileDescriptor()) != _members.end();
+}
+
+void Channel::addMember(Client* client)
+{
+    if (!client || isMember(client))
+        return;
+    _members[client->getFileDescriptor()] = client;
+    if (_members.size() == 1)
+        _operators[client->getFileDescriptor()] = client;
+    std::cout << "Client " << client->getNickname() << " joined " << _name << std::endl;
+}
+
+void Channel::removeMember(Client* client)
+{
+    if (!client || !isMember(client))
+        return;
+    _members.erase(client->getFileDescriptor());
+    _operators.erase(client->getFileDescriptor());
+    std::cout << "Client " << client->getNickname() << " left " << _name << std::endl;
+}
+
+void Channel::broadcast(const std::string& message, Client* exclude)
+{
+    for (std::map<int, Client*>::iterator it = _members.begin(); it != _members.end(); ++it)
+    {
+        Client* current = it->second;
+        if (current != exclude)
+        {
+            current->reply(message);
+            std::cout << "Broadcast sent in " << _name << std::endl;
+        }
+    }
+}
+
+bool Channel::isOperator(Client* client) const
+{
+    if (!client)
+        return false;
+    return _operators.find(client->getFileDescriptor()) != _operators.end();
+}
