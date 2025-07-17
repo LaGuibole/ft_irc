@@ -7,7 +7,7 @@
 #include <fcntl.h>
 #include <cstring>
 #include <cerrno>
-#include "../includes/Numerics.hpp"
+#include "Numerics.hpp"
 
 Server* Server::_instance = NULL;
 

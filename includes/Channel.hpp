@@ -23,6 +23,7 @@ class Channel {
         const std::string& getName() const { return _name; }
         const std::string& getTopic() const { return _topic; }
         std::vector<Client*> getMembers() const;
+        Client* getMemberByNickname(const std::string& nickname) const;
 
         /**
          * @brief Vérifie si un client est membre ou non
@@ -38,6 +39,17 @@ class Channel {
          */
         bool isOperator(Client* client) const;
 
+        /**
+         * @brief Ajoute un operateur
+         * @param client le client qui sera promu operateur
+         */
+        void addOperator(Client* client);
+
+        /**
+         *
+         */
+        void removeOperator(Client* client);
+        
         /**
          * @brief Add un client au channel
          * @param client Client à add

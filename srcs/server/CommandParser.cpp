@@ -64,6 +64,8 @@ void CommandParser::process(int clientFd, const std::string& command,
             handlePrivmsg(client, command, clients, channelManager);
         else if (cmd == "QUIT")
             handleQuit(client, command, channelManager);
+        else if (cmd == "KICK")
+            handleKick(client, params, channelManager);
         // Ici faudra ajouter  d'autres else if pour TOPIC, MODE, KICK, INVITE | JONAS & GUIGUI
         else
             client->reply(":localhost " + std::string(ERR_UNKNOWNCOMMAND) + " " + cmd + " :Unknown command");
@@ -157,6 +159,9 @@ void CommandParser::handleJoin(Client* client, const std::vector<std::string>& p
     Channel* channel = channelManager.getOrCreateChannel(channelName);
     channel->addMember(client);
 
+    // si premier utilisateur : promu automatiquement en operateur
+    if (channel->getMembers().size() == 1)
+        channel->addOperator(client);
     std::string joinMsg = ":" + client->getPrefix() + " JOIN " + channelName;
     channel->broadcast(joinMsg);
 
@@ -167,8 +172,12 @@ void CommandParser::handleJoin(Client* client, const std::vector<std::string>& p
     std::vector<Client*> members = channel->getMembers();
 
     for (size_t i = 0; i < members.size(); ++i)
-        names += members[i]->getNickname() + " ";
-
+    {
+        if (channel->isOperator(members[i]))
+            names += "@" + members[i]->getNickname() + " ";
+        else
+            names += members[i]->getNickname() + " ";
+    }
     client->reply(names);
     client->reply(":localhost " + std::string(RPL_ENDOFNAMES) + " " + client->getNickname() + " " + channelName + " :End of NAMES list");
 }
@@ -251,4 +260,85 @@ void CommandParser::handleQuit(Client* client, const std::string& command, Chann
     // A add un Broadcast ici pour plus tard
     client->reply(":localhost quit.");
     channelManager.removeClientFromAll(client);
+}
+
+void CommandParser::handleKick(Client* client, const std::vector<std::string>& params, ChannelManager& channelManager)
+{
+    if (params.size() < 2)
+    {
+        client->reply(":localhost " + std::string(ERR_NEEDMOREPARAMS) + " KICK :Not enough parameters");
+        return ;
+    }
+
+    const std::string& channelName = params[0];
+    const std::string& targetNick = params[1];
+    std::string comment = (params.size() >  2) ? params[2] : client->getNickname();
+
+    Channel* channel = channelManager.getChannel(channelName);
+    if (!channel)
+    {
+        client->reply(":localhost " + std::string(ERR_NOSUCHCHANNEL) + " " + channelName + " :No such channel.");
+        return ;
+    }
+
+    if (!channel->isMember(client))
+    {
+        client->reply(":localhost " + std::string(ERR_NOTONCHANNEL) + " " + channelName + " :You're not on that channel");
+        return ;
+    }
+
+    if (!channel->isOperator(client))
+    {
+        client->reply(":localhost " + std::string(ERR_CHANOPRIVSNEEDED) + " " + channelName + " :You're not channel operator");
+        return ;
+    }
+
+    Client* target = channel->getMemberByNickname(targetNick);
+
+    if (!target)
+    {
+        client->reply(":localhost " + std::string(ERR_USERNOTINCHANNEL) + " " + channelName + " :They aren't on that channel");
+        return ;
+    }
+    std::string kickMessage = ":" + client->getPrefix() + " KICK " + channelName + " " + targetNick + " :" + comment;
+    target->reply(kickMessage);
+    channel->broadcast(kickMessage, target); // display kick message to all channel members
+    channel->removeMember(target); // kicks target from channel
+}
+
+void CommandParser::handleMode(Client* client, const std::vector<std::string>& params, ChannelManager& channelManager)
+{
+    if (params.empty())
+    {
+        client->reply(":localhost " + std::string(ERR_NEEDMOREPARAMS) + " MODE :Not enough parameters");
+        return ;
+    }
+
+    const std::string& target = params[0];
+
+    if (target[0] != '#')
+    {
+        client->reply(":localhost " + std::string(ERR_USERSDONTMATCH) + " :User mode change is not supported");
+        return ;
+    }
+
+    Channel* channel = channelManager.getChannel(target);
+
+    if (!channel)
+    {
+        client->reply(":localhost " + std::string(ERR_NOSUCHCHANNEL) + " :No such channel");
+        return ;
+    }
+
+    if (!channel->isMember(client))
+    {
+        client->reply(":localhost " + std::string(ERR_NOTONCHANNEL) + " " + target + " :You're not on that channel");
+        return ;
+    }
+
+    if (params.size() == 1)
+    {
+        std::string modeLine = channel->getModeString(); // to do
+        client->reply(":localhost " + std::string(RPL_CHANNELMODEIS))
+    }
 }

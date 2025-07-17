@@ -19,6 +19,16 @@ std::vector<Client*> Channel::getMembers() const
     return members;
 }
 
+Client* Channel::getMemberByNickname(const std::string& nickname) const
+{
+    for (std::map<int, Client*>::const_iterator it = _members.begin(); it != _members.end(); ++it)
+    {
+        if (it->second->getNickname() == nickname)
+            return it->second;
+    }
+    return NULL;
+}
+
 bool Channel::isMember(Client* client) const
 {
     if (!client)
@@ -56,6 +66,20 @@ void Channel::broadcast(const std::string& message, Client* exclude)
             std::cout << "Broadcast sent in " << _name << std::endl;
         }
     }
+}
+
+void Channel::addOperator(Client* client)
+{
+    if (!client)
+        return ;
+    _operators[client->getFileDescriptor()] = client;
+}
+
+void Channel::removeOperator(Client* client)
+{
+    if (!client)
+        return ;
+    _operators.erase(client->getFileDescriptor());
 }
 
 bool Channel::isOperator(Client* client) const

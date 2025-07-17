@@ -8,7 +8,7 @@
 #define RPL_TOPIC "332"
 #define RPL_NAMREPLY "353"
 #define RPL_ENDOFNAMES "366"
-
+#define RPL_CHANNELMODEIS "324"
 // Section 5.2 Des cas d'erreur du site que
 // Guillaume nous a drop a en add si besoin
 #define ERR_NOSUCHNICK "401"
@@ -25,5 +25,8 @@
 #define ERR_NEEDMOREPARAMS "461"
 #define ERR_ALREADYREGISTRED "462"
 #define ERR_PASSWDMISMATCH "464"
+#define ERR_CHANOPRIVSNEEDED "482"
+#define ERR_USERNOTINCHANNEL "441"
+#define ERR_USERSDONTMATCH "502"
 
 #endif

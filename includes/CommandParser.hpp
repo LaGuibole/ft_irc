@@ -30,6 +30,8 @@ class CommandParser {
         static void handlePart(Client* client, const std::vector<std::string>& params, ChannelManager& channelManager);
         static void handlePrivmsg(Client* client, const std::string& command, const std::map<int, Client*>& clients, ChannelManager& channelManager);
         static void handleQuit(Client* client, const std::string& command, ChannelManager& channelManager);
+        static void handleKick(Client* client, const std::vector<std::string>& params, ChannelManager& channelManager);
+        static void handleMode(Client* client, const std::vector<std::string>& params, ChannelManager& channelManager);
         // TODO: Ajouter handleTopic, handleMode, handleKick, handleInvite pour plus tard :)
 };
 
