@@ -24,6 +24,11 @@
 #define ERR_NOTREGISTERED "451"
 #define ERR_NEEDMOREPARAMS "461"
 #define ERR_ALREADYREGISTRED "462"
-#define ERR_PASSWDMISMATCH "464"
+#define ERR_PASSWDMISMATCH  "464"
+#define ERR_NOCHANNAME      "475"
+#define ERR_BADCHANMASK     "476"
+#define ERR_TOOLONG         "477"
+#define ERR_BADCHAR         "478"
+#define ERR_TOOMANYMASK     "479"
 
 #endif

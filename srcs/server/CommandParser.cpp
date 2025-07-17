@@ -156,7 +156,11 @@ void CommandParser::handleJoin(Client* client, const std::vector<std::string>& p
         client->reply(":localhost " + std::string(ERR_NOSUCHCHANNEL) + " " + channelName + " :Invalid channel name");
         return;
     }
-    Channel* channel = channelManager.getOrCreateChannel(channelName);
+    Channel* channel = NULL;
+    if (channelManager.validateChannelName(channelName, client))
+        channel = channelManager.getOrCreateChannel(channelName);
+    else
+        return;;
     channel->addMember(client);
 
     std::string joinMsg = ":" + client->getPrefix() + " JOIN " + channelName;
@@ -261,8 +265,8 @@ void CommandParser::handleInvite(Client* client, std::vector<std::string>& args,
 		return;
 	}
     std::string channel_name = args[1];
-    if (channel_name[0] != '#')
-
+    if (!channelManager.validateChannelName(channel_name, client))
+        return;
 	Client* target = NULL;
 	for (std::map<int, Client*>::const_iterator it = clients.begin(); it != clients.end(); ++it) {
 		if (it->second->getNickname() == args[0]) {
@@ -274,7 +278,7 @@ void CommandParser::handleInvite(Client* client, std::vector<std::string>& args,
 		client->reply(":localhost " + std::string(ERR_NOSUCHNICK) + " " + args[0] + " :No such nick");
 		return;
 	}
-	Channel* channel = channelManager.getChannel("#" + args[1]);
+	Channel* channel = channelManager.getChannel(channel_name);
 	if (channel && !channel->isMember(client)) {
 		client->reply(":localhost " + std::string(ERR_NOTONCHANNEL) + " " + " :you are not a member of this channel: "  + channel_name);
 		return;
