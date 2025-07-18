@@ -5,6 +5,7 @@
 
 #include "ChannelManager.hpp"
 
+#include "Utils.hpp"
 #include "Numerics.hpp"
 
 ChannelManager::ChannelManager() {}
@@ -17,39 +18,32 @@ ChannelManager::~ChannelManager()
 }
 
 bool ChannelManager::validateChannelName(const std::string &name, Client* client) {
-    int error = 0;
-    if (name.empty())
-        error = 1;
-    if (name[0] != '&' || name[0] != '#' || name[0] != '+' || name[0] != '!')
-        error = 2;
-    int index = 0, mask = 0;
-    while (index < name.length()) {
-        if (index > 50) {
-            error = 3;
-            break;
-        }
-        if (name[index] == ' ' || name[index] == ',')
-            error = 4;
-        if (name[index] == ':')
-            mask++;
-        if (mask == 2)
-            error = 5;
-        index++;
-    }
-    switch (error) {
-        case 1:
-            return client->reply(":localhost " + std::string(ERR_NOCHANNAME) + " :Channel name cannot be empty"),false;
-        case 2:
-            return client->reply(":localhost " + std::string(ERR_BADCHANMASK) + " :Channel name must start with '&', '#', '+' or '!'"),false;
-        case 3:
-            return client->reply(":localhost " + std::string(ERR_TOOLONG) + " :Channel name exceeds maximum length of 50 characters"),false;
-        case 4:
-            return client->reply(":localhost " + std::string(ERR_BADCHAR) + " :Channel name must not contain space or comma"),false;
-        case 5:
-            return client->reply(":localhost " + std::string(ERR_TOOMANYMASK) + " :Channel name must not contain more than one ':'"),false;
-        default:
-            return true;
-    }
+	if (name.empty()) {
+		Utils::sendError(client, ERR_NOSUCHCHANNEL, "*", ":Empty channel name");
+		return false;
+	}
+	if (name[0] != '&' && name[0] != '#' && name[0] != '+' && name[0] != '!') {
+		Utils::sendError(client, ERR_BADCHANMASK, name, ":Bad Channel Mask");
+		return false;
+	}
+	if (name.length() > 50) {
+		Utils::sendError(client, ERR_BADCHANMASK, name, ":Channel name too long");
+		return false;
+	}
+	int mask_count = 0;
+	for (size_t i = 0; i < name.length(); ++i) {
+		if (name[i] == ' ' || name[i] == ',') {
+			Utils::sendError(client, ERR_BADCHANMASK, name, ":Channel name must not contain space or comma");
+			return false;
+		}
+		if (name[i] == ':')
+			++mask_count;
+		if (mask_count == 2) {
+			Utils::sendError(client, ERR_BADCHANMASK, name, ":Bad Channel Mask");
+			return false;
+		}
+	}
+	return true;
 }
 
 Channel* ChannelManager::getOrCreateChannel(const std::string& name)

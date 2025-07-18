@@ -6,6 +6,7 @@
 #include "CommandParser.hpp"
 #include <iostream>
 #include <algorithm>
+#include "Utils.hpp"
 
 std::vector<std::string> CommandParser::split(const std::string& str, char delimiter)
 {
@@ -157,10 +158,8 @@ void CommandParser::handleJoin(Client* client, const std::vector<std::string>& p
         return;
     }
     Channel* channel = NULL;
-    if (channelManager.validateChannelName(channelName, client))
-        channel = channelManager.getOrCreateChannel(channelName);
-    else
-        return;;
+	// Ajouter une verif ici pour le nom du channel, c'est en cours
+	channel = channelManager.getOrCreateChannel(channelName);
     channel->addMember(client);
 
     std::string joinMsg = ":" + client->getPrefix() + " JOIN " + channelName;
@@ -261,10 +260,10 @@ void CommandParser::handleQuit(Client* client, const std::string& command, Chann
 
 void CommandParser::handleInvite(Client* client, std::vector<std::string>& args, const std::map<int, Client*>& clients, ChannelManager& channelManager) {
 	if (args.size() < 2) {
-		client->reply(":localhost " + std::string(ERR_NEEDMOREPARAMS) + " PRIVMSG :Not enough parameters");
+		Utils::sendError(client, ERR_NEEDMOREPARAMS, NULL, ":Not enough parameters");
 		return;
 	}
-    std::string channel_name = args[1];
+    const std::string& channel_name = args[1];
     if (!channelManager.validateChannelName(channel_name, client))
         return;
 	Client* target = NULL;
@@ -275,13 +274,13 @@ void CommandParser::handleInvite(Client* client, std::vector<std::string>& args,
 		}
 	}
 	if (!target) {
-		client->reply(":localhost " + std::string(ERR_NOSUCHNICK) + " " + args[0] + " :No such nick");
+		Utils::sendError(client, ERR_NOSUCHNICK, args[0], ":No such nick");
 		return;
 	}
 	Channel* channel = channelManager.getChannel(channel_name);
 	if (channel && !channel->isMember(client)) {
-		client->reply(":localhost " + std::string(ERR_NOTONCHANNEL) + " " + " :you are not a member of this channel: "  + channel_name);
+		Utils::sendError(client, ERR_NOTONCHANNEL, channel_name, ":You're not on that channel");
 		return;
 	}
-	target->reply(":" + client->getHostname() + " INVITE " + target->getNickname() + args[1]);
+	client->reply(":localhost " + std::string(RPL_INVITING) + " " + client->getNickname() + " " + target->getNickname() + " " + args[1]);
 }
