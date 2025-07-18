@@ -3,10 +3,10 @@
 #                                                         :::      ::::::::    #
 #    Makefile                                           :+:      :+:    :+:    #
 #                                                     +:+ +:+         +:+      #
-#    By: david <david@student.42.fr>                +#+  +:+       +#+         #
+#    By: guphilip <guphilip@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2025/06/16 20:28:22 by guillaumeph       #+#    #+#              #
-#    Updated: 2025/07/09 01:46:11 by david            ###   ########.fr        #
+#    Updated: 2025/07/17 19:42:11 by guphilip         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -20,12 +20,12 @@ OBJ_DIR     := build
 INC_DIR     := includes
 
 SRCS        := \
-	srcs/main.cpp \
-	srcs/server/Server.cpp \
-	srcs/client/Client.cpp \
 	srcs/channel/Channel.cpp \
-	srcs/server/CommandParser.cpp \
+	srcs/client/Client.cpp \
+	srcs/main.cpp \
 	srcs/server/ChannelManager.cpp \
+	srcs/server/CommandParser.cpp \
+	srcs/server/Server.cpp \
 	srcs/server/Utils.cpp
 OBJS        := $(SRCS:$(SRC_DIR)/%.cpp=$(OBJ_DIR)/%.o)
 

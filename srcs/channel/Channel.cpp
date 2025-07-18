@@ -1,7 +1,10 @@
 #include "Channel.hpp"
 #include <iostream>
+#include <sstream>
 
-Channel::Channel(const std::string& name) : _name(name), _topic("")
+Channel::Channel(const std::string& name) 
+    : _name(name), _topic(""), _inviteOnly(false), _topicRestricted(false), 
+      _password(""), _hasPassword(false), _userLimit(0), _hasUserLimit(false)
 {
     std::cout << "New channel created: " << this->_name << std::endl;
 }
@@ -17,6 +20,16 @@ std::vector<Client*> Channel::getMembers() const
     for (std::map<int, Client*>::const_iterator it = _members.begin(); it != _members.end(); ++it)
         members.push_back(it->second);
     return members;
+}
+
+Client* Channel::getMemberByNickname(const std::string& nickname) const
+{
+    for (std::map<int, Client*>::const_iterator it = _members.begin(); it != _members.end(); ++it)
+    {
+        if (it->second->getNickname() == nickname)
+            return it->second;
+    }
+    return NULL;
 }
 
 bool Channel::isMember(Client* client) const
@@ -58,9 +71,62 @@ void Channel::broadcast(const std::string& message, Client* exclude)
     }
 }
 
+void Channel::addOperator(Client* client)
+{
+    if (!client)
+        return ;
+    _operators[client->getFileDescriptor()] = client;
+}
+
+void Channel::removeOperator(Client* client)
+{
+    if (!client)
+        return ;
+    _operators.erase(client->getFileDescriptor());
+}
+
 bool Channel::isOperator(Client* client) const
 {
     if (!client)
         return false;
     return _operators.find(client->getFileDescriptor()) != _operators.end();
+}
+
+void Channel::setUserLimit(int limit)
+{
+    if (limit <= 0)
+        return ;
+    _hasUserLimit = true;
+    _userLimit = static_cast<size_t>(limit);
+}
+
+void Channel::unsetUserLimit()
+{
+    _hasUserLimit = false;
+    _userLimit = 0;
+}
+
+std::string Channel::getModeString() const
+{
+    std::string flags = "+";
+    std::string params;
+
+    if (_inviteOnly)
+        flags += "i";
+    if (_topicRestricted)
+        flags += "t";
+    if (_hasPassword)
+    {
+        flags += "k";
+        params += " " + _password;
+    }
+    if (_hasUserLimit)
+    {
+        flags += "l";
+        std::ostringstream oss;
+        oss << " " << _userLimit;
+        params += oss.str();
+    }
+
+    return flags + params;
 }

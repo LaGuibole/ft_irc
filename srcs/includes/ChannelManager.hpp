@@ -3,7 +3,7 @@
 
 #include <map>
 #include <string>
-#include "../../includes/Channel.hpp"
+#include "Channel.hpp"
 
 /**
  * @brief Manager pour créer et gérer channels
@@ -15,6 +15,15 @@ class ChannelManager {
     public:
         ChannelManager();
         ~ChannelManager();
+
+        /**
+         * @brief Valide le nom d'un canal IRC selon les règles du protocole.
+         * En cas d'erreur, un message d'erreur est envoyé au client.
+         * @param name Nom du canal à valider.
+         * @param client Pointeur vers le client à qui envoyer les messages d'erreur.
+         * @return true si le nom est valide, false sinon.
+         */
+        bool validateChannelName(const std::string& name, Client* client);
 
         /**
          * @brief Récupère ou crée un channel
@@ -35,6 +44,7 @@ class ChannelManager {
          * @param client Iencli à tej
          */
         void removeClientFromAll(Client* client);
+        
 };
 
 #endif
