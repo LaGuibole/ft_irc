@@ -159,6 +159,13 @@ void CommandParser::handleJoin(Client* client, const std::vector<std::string>& p
         return;
     }
     Channel* channel = channelManager.getOrCreateChannel(channelName);
+
+    // verif de la limite d'user pour mode -l
+    if (channel->hasUserLimit() && channel->getMembers().size() >= channel->getUserLimit())
+    {
+        client->reply(":localhost " + std::string(ERR_CHANNELISFULL) + client->getNickname() + " " + channelName + " :Cannot join channel (+l)");
+        return ;
+    }
     channel->addMember(client);
 
     // si premier utilisateur : promu automatiquement en operateur
@@ -353,6 +360,23 @@ void CommandParser::applyChannelMode(Client* client, Channel* channel, const std
                 channel->broadcast(modeMsg);
                 break;
             }
+            case 'l':
+            {
+                if (adding)
+                {
+                    if (paramIndex >= modeParams.size())
+                    {
+                        client->reply(":localhost " + std::string(ERR_NEEDMOREPARAMS) + " MODE: Missing parameters for mode l");
+                        return ;
+                    }
+                    int limit = atoi(modeParams[paramIndex++].c_str());
+                    channel->setUserLimit(limit);
+                }
+                else
+                    channel->unsetUserLimit();
+                break;
+            }
+
             default:
                 client->reply(":localhost " + std::string(ERR_UNKNOWNMODE) + " " + mode + " :is not a supported mode (yet)");
                 break;

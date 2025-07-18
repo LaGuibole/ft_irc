@@ -21,18 +21,20 @@ class Channel {
         bool _topicRestricted;
         std::string _password;
         bool _hasPassword;
-        size_t _userLimit;
-        bool _hasUserLimit;
 
     public:
-         Channel(const std::string& name);
+        Channel(const std::string& name);
         ~Channel();
 
         const std::string& getName() const { return _name; }
         const std::string& getTopic() const { return _topic; }
+        bool hasUserLimit() const { return _hasUserLimit; }
+        size_t getUserLimit() const { return _userLimit; }
         std::vector<Client*> getMembers() const;
         std::string getModeString() const;
         Client* getMemberByNickname(const std::string& nickname) const;
+        size_t _userLimit;
+        bool _hasUserLimit;
 
         /**
          * @brief Vérifie si un client est membre ou non
@@ -58,6 +60,16 @@ class Channel {
          *
          */
         void removeOperator(Client* client);
+
+        /**
+         *
+         */
+        void setUserLimit(int limit);
+
+        /**
+         *
+         */
+        void unsetUserLimit();
 
         /**
          * @brief Add un client au channel

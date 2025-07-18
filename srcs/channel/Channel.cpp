@@ -90,6 +90,20 @@ bool Channel::isOperator(Client* client) const
     return _operators.find(client->getFileDescriptor()) != _operators.end();
 }
 
+void Channel::setUserLimit(int limit)
+{
+    if (limit <= 0)
+        return ;
+    _hasUserLimit = true;
+    _userLimit = limit;
+}
+
+void Channel::unsetUserLimit()
+{
+    _hasUserLimit = false;
+    _userLimit = 0;
+}
+
 std::string Channel::getModeString() const
 {
     std::string flags = "+";
