@@ -1,6 +1,7 @@
 #include "ChannelManager.hpp"
 #include "Numerics.hpp"
 #include "Utils.hpp"
+#include <iostream>
 
 ChannelManager::ChannelManager() {}
 
@@ -58,9 +59,29 @@ Channel* ChannelManager::getChannel(const std::string& name)
 
 void ChannelManager::removeClientFromAll(Client* client)
 {
-    for (std::map<std::string, Channel*>::iterator it = _channels.begin(); it != _channels.end(); ++it)
-        it->second->removeMember(client, this);
-    // Ici faudra faire la suite dans le cas où Delete le channel si y'a pas de ienclis
+	std::vector<std::string> toDelete;
+
+	for (std::map<std::string, Channel*>::iterator it = _channels.begin(); it != _channels.end(); ++it)
+	{
+		Channel* channel = it->second;
+		channel->removeMember(client, NULL);
+		if (channel->getMembers().empty())
+			toDelete.push_back(it->first);
+	}
+
+	for (size_t i = 0; i < toDelete.size(); ++i)
+	{
+		Channel* ch = _channels[toDelete[i]];
+		delete ch;
+		_channels.erase(toDelete[i]);
+	}
+	// Ici faudra faire la suite dans le cas où Delete le channel si y'a pas de ienclis
+}
+
+void ChannelManager::removeChannel(Channel* channel)
+{
+    _channels.erase(channel->getName());
+    delete channel;
 }
 
 void ChannelManager::removeChannel(Channel* channel)

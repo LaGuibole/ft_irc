@@ -6,6 +6,9 @@
 #include "Client.hpp"
 #include "ChannelManager.hpp"
 #include "Numerics.hpp"
+#include "Server.hpp"
+
+class Server;
 
 /**
  * @brief Classe pour parser et traiter les commandes
@@ -15,7 +18,8 @@ class CommandParser {
         static void process(int clientFd, const std::string& command,
                             std::map<int, Client*>& clients,
                             ChannelManager& channelManager,
-                            const std::string& password);
+                            const std::string& password,
+                            Server &server);
 
     private:
         static std::vector<std::string> split(const std::string& str, char delimiter);
@@ -29,7 +33,7 @@ class CommandParser {
         static void handleJoin(Client* client, const std::vector<std::string>& params, ChannelManager& channelManager);
         static void handlePart(Client* client, const std::vector<std::string>& params, ChannelManager& channelManager);
         static void handlePrivmsg(Client* client, const std::string& command, const std::map<int, Client*>& clients, ChannelManager& channelManager);
-        static void handleQuit(Client* client, const std::string& command, ChannelManager& channelManager);
+        static void handleQuit(Client* client, const std::string& command, ChannelManager& channelManager, Server &server);
         static void handleInvite(Client* client, std::vector<std::string>& params, const std::map<int, Client*>& clients, ChannelManager& channelManager);
         static void handleKick(Client* client, const std::vector<std::string>& params, ChannelManager& channelManager);
         static void handleMode(Client* client, const std::vector<std::string>& params, ChannelManager& channelManager);

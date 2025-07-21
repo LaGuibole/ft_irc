@@ -56,7 +56,7 @@ void Channel::removeMember(Client* client, ChannelManager* channel)
     _members.erase(client->getFileDescriptor());
     _operators.erase(client->getFileDescriptor());
     std::cout << "Client " << client->getNickname() << " left " << _name << std::endl;
-    if (this->getMembers().size() == 0)
+    if (this->getMembers().size() == 0 && channel)
         channel->removeChannel(this);
 }
 
