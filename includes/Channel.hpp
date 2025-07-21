@@ -1,10 +1,12 @@
-#ifndef CHANNEL_HPP
-#define CHANNEL_HPP
+#pragma once
 
 #include <string>
 #include <map>
 #include <vector>
 #include "Client.hpp"
+#include "ChannelManager.hpp"
+
+class ChannelManager;
 
 /**
  * @brief Classe Channel pour gérer les membres et opérateur
@@ -16,14 +18,26 @@ class Channel {
         std::map<int, Client*> _members;    /** Membres du channel */
         std::map<int, Client*> _operators;  /** Opérateurs du channel */
 
+        bool _inviteOnly;
+        bool _topicRestricted;
+        std::string _password;
+        bool _hasPassword;
+        size_t _userLimit;                  /** Limite d'utilisateurs */
+        bool _hasUserLimit;                 /** Si la limite est activée */
+
     public:
-         Channel(const std::string& name);
+        Channel(const std::string& name);
         ~Channel();
 
         const std::string& getName() const { return _name; }
         const std::string& getTopic() const { return _topic; }
+        bool hasUserLimit() const { return _hasUserLimit; }
+        size_t getUserLimit() const { return _userLimit; }
+        bool isInviteOnly() const { return _inviteOnly; }
+        bool isTopicRestricted() const { return _topicRestricted; }
         std::vector<Client*> getMembers() const;
-
+        std::string getModeString() const;
+        Client* getMemberByNickname(const std::string& nickname) const;
         /**
          * @brief Vérifie si un client est membre ou non
          * @param client Client à checker
@@ -39,6 +53,29 @@ class Channel {
         bool isOperator(Client* client) const;
 
         /**
+         * @brief Ajoute un operateur
+         * @param client le client qui sera promu operateur
+         */
+        void addOperator(Client* client);
+
+        /**
+         * @brief Retire un opérateur
+         * @param client le client à dégrader
+         */
+        void removeOperator(Client* client);
+
+        /**
+         * @brief Définit la limite d'utilisateurs
+         * @param limit nombre maximum d'utilisateurs
+         */
+        void setUserLimit(int limit);
+
+        /**
+         * @brief Supprime la limite d'utilisateurs
+         */
+        void unsetUserLimit();
+
+        /**
          * @brief Add un client au channel
          * @param client Client à add
          */
@@ -48,7 +85,11 @@ class Channel {
          * @brief Tej un client du channel
          * @param client Client à tej
          */
-        void removeMember(Client* client);
+        void removeMember(Client* client, ChannelManager* channel);
+
+        void changeInviteMode();
+
+        void changeTopicMode();
 
         /**
          * @brief Broadcast un message à tous les membres
@@ -59,5 +100,3 @@ class Channel {
 
         void setTopic(const std::string& topic) { _topic = topic; }
 };
-
-#endif
