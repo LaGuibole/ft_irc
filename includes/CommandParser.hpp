@@ -30,7 +30,11 @@ class CommandParser {
         static void handlePart(Client* client, const std::vector<std::string>& params, ChannelManager& channelManager);
         static void handlePrivmsg(Client* client, const std::string& command, const std::map<int, Client*>& clients, ChannelManager& channelManager);
         static void handleQuit(Client* client, const std::string& command, ChannelManager& channelManager);
+        static void handleInvite(Client* client, std::vector<std::string>& params, const std::map<int, Client*>& clients, ChannelManager& channelManager);
         static void handleKick(Client* client, const std::vector<std::string>& params, ChannelManager& channelManager);
         static void handleMode(Client* client, const std::vector<std::string>& params, ChannelManager& channelManager);
         // TODO: Ajouter handleTopic, handleMode, handleKick, handleInvite pour plus tard :)
-};
+        static void handlePing(Client* client, const std::vector<std::string>& params);
+        static void handleWho(Client* client, const std::vector<std::string>& params, const std::map<int, Client*>& clients, ChannelManager& channelManager);
+    };
+

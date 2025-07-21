@@ -139,11 +139,65 @@ void Server::handleClientData(int clientFd)
         client->appendToBuffer(std::string(buffer));
     std::string& buf = client->getBuffer();
     size_t pos = 0;
+    static std::map<int, int> realErrorCounts;
+    static std::map<int, std::string> lastNickAttempt;
+    
     while ((pos = buf.find("\r\n")) != std::string::npos)
     {
         std::string command = buf.substr(0, pos);
+        if (!client->isRegistered() && !command.empty())
+        {
+            std::vector<std::string> parts;
+            size_t start = 0, end = 0;
+            while ((end = command.find(' ', start)) != std::string::npos)
+            {
+                std::string token = command.substr(start, end - start);
+                if (!token.empty())
+                    parts.push_back(token);
+                start = end + 1;
+            }
+            std::string token = command.substr(start);
+            if (!token.empty())
+                parts.push_back(token);
+            
+            if (!parts.empty())
+            {
+                std::string cmd = parts[0];
+                if (cmd != "PASS" && cmd != "NICK" && cmd != "USER" && cmd != "CAP")
+                    realErrorCounts[clientFd]++;
+                else if (cmd == "NICK" && parts.size() > 1)
+                {
+                    if (lastNickAttempt[clientFd] == parts[1])
+                    {}
+                    else
+                        lastNickAttempt[clientFd] = parts[1];
+                }
+            }
+        }
+        
         CommandParser::process(clientFd, command, _clients, _channelManager, _password);
         client->eraseFromBuffer(0, pos + 2);
+
+        if (client->shouldDisconnect())
+        {
+            std::cout << "[DEBUG] Client marked for disconnection due to nickname conflict" << std::endl;
+            removeClient(clientFd);
+            realErrorCounts.erase(clientFd);
+            lastNickAttempt.erase(clientFd);
+            return;
+        }
+    }
+    if (!client->isRegistered() && realErrorCounts[clientFd] > 10)
+    {
+        client->reply(":localhost ERROR :Too many invalid commands");
+        removeClient(clientFd);
+        realErrorCounts.erase(clientFd);
+        lastNickAttempt.erase(clientFd);
+    }
+    if (client->isRegistered())
+    {
+        realErrorCounts.erase(clientFd);
+        lastNickAttempt.erase(clientFd);
     }
 }
 

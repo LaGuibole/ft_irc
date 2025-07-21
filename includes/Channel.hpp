@@ -18,11 +18,12 @@ class Channel {
         std::map<int, Client*> _members;    /** Membres du channel */
         std::map<int, Client*> _operators;  /** Opérateurs du channel */
 
-        // FOR MODE CMDS :
         bool _inviteOnly;
         bool _topicRestricted;
         std::string _password;
         bool _hasPassword;
+        size_t _userLimit;                  /** Limite d'utilisateurs */
+        bool _hasUserLimit;                 /** Si la limite est activée */
 
     public:
         Channel(const std::string& name);
@@ -35,8 +36,6 @@ class Channel {
         std::vector<Client*> getMembers() const;
         std::string getModeString() const;
         Client* getMemberByNickname(const std::string& nickname) const;
-        size_t _userLimit;
-        bool _hasUserLimit;
 
         /**
          * @brief Vérifie si un client est membre ou non
@@ -59,17 +58,19 @@ class Channel {
         void addOperator(Client* client);
 
         /**
-         *
+         * @brief Retire un opérateur
+         * @param client le client à dégrader
          */
         void removeOperator(Client* client);
 
         /**
-         *
+         * @brief Définit la limite d'utilisateurs
+         * @param limit nombre maximum d'utilisateurs
          */
         void setUserLimit(int limit);
 
         /**
-         *
+         * @brief Supprime la limite d'utilisateurs
          */
         void unsetUserLimit();
 

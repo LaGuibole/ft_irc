@@ -10,7 +10,7 @@
 class Client {
 private:
     int _fileDescriptor;          /** File descriptor de la socket */
-    struct sockaddr_in _address;  /** Adresse IP */
+    //struct sockaddr_in _address;  /** Adresse IP */
     std::string _hostname;        /** Hostname */
     std::string _nickname;        /** Nickname */
     std::string _username;        /** Username */
@@ -18,6 +18,8 @@ private:
     std::string _buffer;          /** Buffer pour données entrantes */
     bool _isPassValidated;        /** Si PASS validé */
     bool _isRegistered;           /** Si fully registered */
+    bool _nickConflict;
+    bool _toDisconnect;
 
 public:
     Client(int fd, const struct sockaddr_in& addr);
@@ -32,12 +34,17 @@ public:
     bool isRegistered() const { return _isRegistered; }
     std::string& getBuffer() { return _buffer; }
     std::string getPrefix() const { return _nickname + "!" + _username + "@" + _hostname; }
+    bool hasNickConflict() const { return _nickConflict; }
+    bool shouldDisconnect() const { return _toDisconnect; }
+
 
     void setNickname(const std::string& nick) { _nickname = nick; }
     void setUsername(const std::string& user) { _username = user; }
     void setRealname(const std::string& real) { _realname = real; }
     void setPassValidated(bool validated) { _isPassValidated = validated; }
     void setRegistered(bool registered) { _isRegistered = registered; }
+    void setNickConflict(bool conflict) { _nickConflict = conflict; }
+    void setToDisconnect(bool disconnect) { _toDisconnect = disconnect; }
 
     /**
      * @brief Ajoute des données au buffer
