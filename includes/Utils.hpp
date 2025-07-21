@@ -1,5 +1,4 @@
-#ifndef UTILS_HPP
-#define UTILS_HPP
+#pragma once
 
 #include <string>
 #include <vector>
@@ -16,4 +15,3 @@ namespace Utils {
     std::string trim(const std::string& str);
 }
 
-#endif

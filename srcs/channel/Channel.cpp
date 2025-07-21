@@ -47,13 +47,15 @@ void Channel::addMember(Client* client)
     std::cout << "Client " << client->getNickname() << " joined " << _name << std::endl;
 }
 
-void Channel::removeMember(Client* client)
+void Channel::removeMember(Client* client, ChannelManager* channel)
 {
     if (!client || !isMember(client))
         return;
     _members.erase(client->getFileDescriptor());
     _operators.erase(client->getFileDescriptor());
     std::cout << "Client " << client->getNickname() << " left " << _name << std::endl;
+    if (this->getMembers().size() == 0)
+        channel->removeChannel(this);
 }
 
 void Channel::broadcast(const std::string& message, Client* exclude)

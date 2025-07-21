@@ -1,9 +1,10 @@
-#ifndef CHANNEL_MANAGER_HPP
-#define CHANNEL_MANAGER_HPP
+#pragma once
 
 #include <map>
 #include <string>
 #include "Channel.hpp"
+
+class Channel;
 
 /**
  * @brief Manager pour créer et gérer channels
@@ -35,7 +36,6 @@ class ChannelManager {
          * @param client Iencli à tej
          */
         void removeClientFromAll(Client* client);
-        
-};
 
-#endif
+        void removeChannel(Channel* channel);
+};

@@ -1,5 +1,4 @@
-#ifndef COMMAND_PARSER_HPP
-#define COMMAND_PARSER_HPP
+#pragma once
 
 #include <string>
 #include <vector>
@@ -35,5 +34,3 @@ class CommandParser {
         static void handleMode(Client* client, const std::vector<std::string>& params, ChannelManager& channelManager);
         // TODO: Ajouter handleTopic, handleMode, handleKick, handleInvite pour plus tard :)
 };
-
-#endif

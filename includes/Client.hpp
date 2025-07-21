@@ -1,5 +1,4 @@
-#ifndef CLIENT_HPP
-#define CLIENT_HPP
+#pragma once
 
 #include <string>
 #include <netinet/in.h>
@@ -64,5 +63,3 @@ public:
      */
     void welcome();
 };
-
-#endif

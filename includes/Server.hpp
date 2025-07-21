@@ -1,5 +1,4 @@
-#ifndef SERVER_HPP
-#define SERVER_HPP
+#pragma once
 
 #include <vector>
 #include <map>
@@ -67,5 +66,3 @@ class Server {
          */
         void removeClient(int clientFd);
 };
-
-#endif

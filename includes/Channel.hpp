@@ -1,10 +1,12 @@
-#ifndef CHANNEL_HPP
-#define CHANNEL_HPP
+#pragma once
 
 #include <string>
 #include <map>
 #include <vector>
 #include "Client.hpp"
+#include "ChannelManager.hpp"
+
+class ChannelManager;
 
 /**
  * @brief Classe Channel pour gérer les membres et opérateur
@@ -81,7 +83,7 @@ class Channel {
          * @brief Tej un client du channel
          * @param client Client à tej
          */
-        void removeMember(Client* client);
+        void removeMember(Client* client, ChannelManager* channel);
 
         /**
          * @brief Broadcast un message à tous les membres
@@ -92,5 +94,3 @@ class Channel {
 
         void setTopic(const std::string& topic) { _topic = topic; }
 };
-
-#endif

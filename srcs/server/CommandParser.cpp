@@ -163,7 +163,7 @@ void CommandParser::handleJoin(Client* client, const std::vector<std::string>& p
     // verif de la limite d'user pour mode -l
     if (channel->hasUserLimit() && channel->getMembers().size() >= channel->getUserLimit())
     {
-        client->reply(":localhost " + std::string(ERR_CHANNELISFULL) + client->getNickname() + " " + channelName + " :Cannot join channel (+l)");
+        client->reply(":localhost " + std::string(ERR_CHANNELISFULL) + " " + client->getNickname() + " " + channelName + " :Cannot join channel (+l)");
         return ;
     }
     channel->addMember(client);
@@ -212,7 +212,7 @@ void CommandParser::handlePart(Client* client, const std::vector<std::string>& p
     }
     std::string partMsg = ":" + client->getPrefix() + " PART " + channelName + " :" + (params.size() > 1 ? params[1] : "Leaving");
     channel->broadcast(partMsg);
-    channel->removeMember(client);
+    channel->removeMember(client, &channelManager);
 }
 
 void CommandParser::handlePrivmsg(Client* client, const std::string& command, const std::map<int, Client*>& clients, ChannelManager& channelManager)
@@ -312,7 +312,7 @@ void CommandParser::handleKick(Client* client, const std::vector<std::string>& p
     std::string kickMessage = ":" + client->getPrefix() + " KICK " + channelName + " " + targetNick + " :" + comment;
     target->reply(kickMessage);
     channel->broadcast(kickMessage, target); // display kick message to all channel members
-    channel->removeMember(target); // kicks target from channel
+    channel->removeMember(target, &channelManager); // kicks target from channel
 }
 
 void CommandParser::applyChannelMode(Client* client, Channel* channel, const std::string& modeFlags, std::vector<std::string>& modeParams)

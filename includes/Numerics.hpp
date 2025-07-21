@@ -1,5 +1,4 @@
-#ifndef NUMERICS_HPP
-# define NUMERICS_HPP
+#pragma once
 
 #define RPL_WELCOME "001"
 #define RPL_YOURHOST "002"
@@ -31,4 +30,3 @@
 #define ERR_UNKNOWNMODE "472"
 #define ERR_CHANNELISFULL "471"
 
-#endif
