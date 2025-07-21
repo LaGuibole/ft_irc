@@ -21,7 +21,8 @@ class Channel {
         std::string _password;
         bool _hasPassword;
         size_t _userLimit;                  /** Limite d'utilisateurs */
-        bool _hasUserLimit;                 /** Si la limite est activée */
+		bool _hasUserLimit;                 /** Si la limite est activée */
+		bool _isTopicRestricted;                 /** Si la limite est activée */
 
     public:
         Channel(const std::string& name);
@@ -31,12 +32,15 @@ class Channel {
         const std::string& getTopic() const { return _topic; }
         bool hasUserLimit() const { return _hasUserLimit; }
 		bool isInviteOnly() const { return _inviteOnly; }
+		bool isTopicRestricted() const { return _isTopicRestricted; }
         size_t getUserLimit() const { return _userLimit; }
         std::vector<Client*> getMembers() const;
         std::string getModeString() const;
         Client* getMemberByNickname(const std::string& nickname) const;
 
+		///L'appel de ces fonctions inverse le mode concerne
 		void changeInviteMode();
+		void changeTopicMode();
 
         /**
          * @brief Vérifie si un client est membre ou non

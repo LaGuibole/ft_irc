@@ -4,7 +4,7 @@
 
 Channel::Channel(const std::string& name) 
     : _name(name), _topic(""), _inviteOnly(false), _topicRestricted(false), 
-      _password(""), _hasPassword(false), _userLimit(0), _hasUserLimit(false)
+      _password(""), _hasPassword(false), _userLimit(0), _hasUserLimit(false), _isTopicRestricted(false)
 {
     std::cout << "New channel created: " << this->_name << std::endl;
 }
@@ -112,6 +112,13 @@ void Channel::changeInviteMode()
 		this->_inviteOnly = false;
 	else
 		this->_inviteOnly = true;
+}
+
+void Channel::changeTopicMode() {
+	if (this->_topicRestricted)
+		this->_topicRestricted = false;
+	else
+		this->_topicRestricted = true;
 }
 
 std::string Channel::getModeString() const
