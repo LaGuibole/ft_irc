@@ -6,7 +6,7 @@
 #    By: guphilip <guphilip@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2025/06/16 20:28:22 by guillaumeph       #+#    #+#              #
-#    Updated: 2025/07/21 09:42:44 by guphilip         ###   ########.fr        #
+#    Updated: 2025/07/17 19:42:11 by guphilip         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -38,7 +38,7 @@ else
 endif
 
 CXX         := c++
-CXXFLAGS    := -std=c++98 -I. -I$(INC_DIR) -Isrcs/includes -Isrcs/server/includes
+CXXFLAGS    := -Wall -Wextra -Werror -std=c++98 -I. -I$(INC_DIR) -Isrcs/includes -Isrcs/server/includes
 
 # ----------------------------------------------------------------------------- #
 
