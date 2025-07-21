@@ -84,8 +84,8 @@ void CommandParser::process(int clientFd, const std::string& command,
         if (cmd != "PASS" && cmd != "NICK" && cmd != "USER" && cmd != "CAP")
             client->reply(":localhost " + std::string(ERR_NOTREGISTERED) + " :You have not registered");
     }
-    if (!client->isRegistered() &&
-        client->isPassValidated() &&
+    if (!client->isRegistered() && 
+        client->isPassValidated() && 
         !client->getNickname().empty() &&
         !client->getUsername().empty() &&
         !client->hasNickConflict())
@@ -148,11 +148,11 @@ void CommandParser::handleNick(Client* client, const std::vector<std::string>& p
         client->reply(":localhost " + std::string(ERR_NONICKNAMEGIVEN) + " :No nickname given");
         return;
     }
-
+    
     std::string newNick = params[0];
     if (client->getNickname() == newNick)
         return;
-
+    
     for (std::map<int, Client*>::const_iterator it = clients.begin(); it != clients.end(); ++it)
     {
         if (it->second != client && it->second->getNickname() == newNick)
@@ -532,9 +532,9 @@ void CommandParser::handleWho(Client* client, const std::vector<std::string>& pa
         client->reply(":localhost " + std::string(RPL_ENDOFWHO) + " " + client->getNickname() + " * :End of WHO list");
         return;
     }
-
+    
     std::string target = params[0];
-
+    
     if (target[0] == '#')
     {
         // WHO pour un channel
@@ -544,13 +544,13 @@ void CommandParser::handleWho(Client* client, const std::vector<std::string>& pa
             client->reply(":localhost " + std::string(ERR_NOSUCHCHANNEL) + " " + target + " :No such channel");
             return;
         }
-
+        
         if (!channel->isMember(client))
         {
             client->reply(":localhost " + std::string(ERR_NOTONCHANNEL) + " " + target + " :You're not on that channel");
             return;
         }
-
+        
         std::vector<Client*> members = channel->getMembers();
         for (size_t i = 0; i < members.size(); ++i)
         {
@@ -558,8 +558,8 @@ void CommandParser::handleWho(Client* client, const std::vector<std::string>& pa
             std::string flags = "H";
             if (channel->isOperator(member))
                 flags += "@";
-            client->reply(":localhost 352 " + client->getNickname() + " " + target + " " +
-                         member->getUsername() + " " + member->getHostname() + " localhost " +
+            client->reply(":localhost 352 " + client->getNickname() + " " + target + " " + 
+                         member->getUsername() + " " + member->getHostname() + " localhost " + 
                          member->getNickname() + " " + flags + " :0 " + member->getRealname());
         }
         client->reply(":localhost " + std::string(RPL_ENDOFWHO) + " " + client->getNickname() + " " + target + " :End of WHO list");
@@ -571,8 +571,8 @@ void CommandParser::handleWho(Client* client, const std::vector<std::string>& pa
             if (it->second->getNickname() == target)
             {
                 Client* targetClient = it->second;
-                client->reply(":localhost 352 " + client->getNickname() + " * " +
-                             targetClient->getUsername() + " " + targetClient->getHostname() + " localhost " +
+                client->reply(":localhost 352 " + client->getNickname() + " * " + 
+                             targetClient->getUsername() + " " + targetClient->getHostname() + " localhost " + 
                              targetClient->getNickname() + " H :0 " + targetClient->getRealname());
                 break;
             }
