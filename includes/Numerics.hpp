@@ -8,9 +8,11 @@
 #define RPL_AWAY "301"
 #define RPL_TOPIC "332"
 #define RPL_INVITING "341"
+#define RPL_WHOREPLY "352"
+#define RPL_ENDOFWHO "315"
 #define RPL_NAMREPLY "353"
 #define RPL_ENDOFNAMES "366"
-
+#define RPL_CHANNELMODEIS "324"
 // Section 5.2 Des cas d'erreur du site que
 // Guillaume nous a drop a en add si besoin
 #define ERR_NOSUCHNICK "401"
@@ -28,5 +30,10 @@
 #define ERR_BADCHANMASK "476"
 #define ERR_BADCHAR "479"
 #define ERR_TOOMANYMASK "480"
+#define ERR_CHANOPRIVSNEEDED "482"
+#define ERR_USERNOTINCHANNEL "441"
+#define ERR_USERSDONTMATCH "502"
+#define ERR_CHANNELISFULL "471"
+#define ERR_UNKNOWNMODE "472"
 
 #endif

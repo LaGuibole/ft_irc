@@ -1,12 +1,6 @@
-/**
- * @file ChannelManager.cpp
- * @brief Implémentation du ChannelManager.
- */
-
 #include "ChannelManager.hpp"
-
-#include "Utils.hpp"
 #include "Numerics.hpp"
+#include "Utils.hpp"
 
 ChannelManager::ChannelManager() {}
 
@@ -18,7 +12,7 @@ ChannelManager::~ChannelManager()
 }
 
 bool ChannelManager::validateChannelName(const std::string &name, Client* client) {
-	if (name.empty()) {
+    if (name.empty()) {
 		Utils::sendError(client, ERR_NOSUCHCHANNEL, "*", ":Empty channel name");
 		return false;
 	}

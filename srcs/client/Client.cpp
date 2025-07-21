@@ -5,9 +5,10 @@
 #include <arpa/inet.h> // Pour inet_ntop
 
 Client::Client(int fd, const struct sockaddr_in& addr)
-    : _fileDescriptor(fd), _address(addr), _hostname(""),
+    : _fileDescriptor(fd), _hostname(""),
       _nickname(""), _username(""), _realname(""),
-      _buffer(""), _isPassValidated(false), _isRegistered(false)
+      _buffer(""), _isPassValidated(false), _isRegistered(false),
+      _nickConflict(false), _toDisconnect(false)
 {
     char host[INET_ADDRSTRLEN];
     inet_ntop(AF_INET, &(addr.sin_addr), host, INET_ADDRSTRLEN);

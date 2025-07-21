@@ -1,8 +1,3 @@
-/**
- * @file Utils.cpp
- * @brief Implémentation des utilitaires.
- */
-
 #include "Utils.hpp"
 
 
@@ -16,6 +11,9 @@ std::string Utils::trim(const std::string& str)
 }
 
 void Utils::sendError(Client* client, const std::string& code, const std::string& target, const std::string& message) {
-	std::string texte = ":localhost " + code + " " + client->getNickname() + " " + target + " : " + message + "\r\n";
-	send(client->getFileDescriptor(), texte.c_str(), texte.length(), 0);
+    std::string texte = ":localhost " + code + " " + client->getNickname();
+    if (!target.empty() && target != "NULL")
+        texte += " " + target;
+    texte += " " + message;
+    client->reply(texte);  // Utiliser reply() au lieu de send() direct
 }

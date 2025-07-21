@@ -14,7 +14,7 @@ namespace Utils {
      * @param str String à trim
      * @return String trimmée
      */
-	void sendError(Client* client, const std::string& code, const std::string& target, const std::string& message);
+    void sendError(Client* client, const std::string& code, const std::string& target, const std::string& message);
 	std::string trim(const std::string& str);
 }
 
