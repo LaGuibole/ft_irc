@@ -106,6 +106,14 @@ void Channel::unsetUserLimit()
     _userLimit = 0;
 }
 
+void Channel::changeInviteMode()
+{
+	if (this->_inviteOnly)
+		this->_inviteOnly = false;
+	else
+		this->_inviteOnly = true;
+}
+
 std::string Channel::getModeString() const
 {
     std::string flags = "+";

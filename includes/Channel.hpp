@@ -30,10 +30,13 @@ class Channel {
         const std::string& getName() const { return _name; }
         const std::string& getTopic() const { return _topic; }
         bool hasUserLimit() const { return _hasUserLimit; }
+		bool isInviteOnly() const { return _inviteOnly; }
         size_t getUserLimit() const { return _userLimit; }
         std::vector<Client*> getMembers() const;
         std::string getModeString() const;
         Client* getMemberByNickname(const std::string& nickname) const;
+
+		void changeInviteMode();
 
         /**
          * @brief Vérifie si un client est membre ou non

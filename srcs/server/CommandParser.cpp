@@ -349,7 +349,16 @@ void CommandParser::handleInvite(Client* client, std::vector<std::string>& args,
 		Utils::sendError(client, ERR_NOTONCHANNEL, channel_name, ":You're not on that channel");
 		return;
 	}
+	else if (channel && channel->isMember(target)) {
+		Utils::sendError(client, ERR_USERONCHANNEL, channel_name, ":is already on channel");
+		return;
+	}
+	if (channel && channel->isInviteOnly() && !channel->isOperator(client)) {
+		Utils::sendError(client, ERR_CHANOPRIVSNEEDED, channel->getName(), ":You're not channel operator");
+		return;
+	}
     client->reply(":localhost " + std::string(RPL_INVITING) + " " + client->getNickname() + " " + target->getNickname() + " " + args[1]);
+	target->reply(":" + client->getNickname() + " INVITE " + target->getNickname() + " :" + channel_name);
 }
 
 void CommandParser::handleKick(Client* client, const std::vector<std::string>& params, ChannelManager& channelManager)
