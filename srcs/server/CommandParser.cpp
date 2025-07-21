@@ -403,7 +403,7 @@ void CommandParser::handleKick(Client* client, const std::vector<std::string>& p
     std::string kickMessage = ":" + client->getPrefix() + " KICK " + channelName + " " + targetNick + " :" + comment;
     target->reply(kickMessage);
     channel->broadcast(kickMessage, target);
-    channel->removeMember(target);
+    channel->removeMember(target, &channelManager);
 }
 
 void CommandParser::applyChannelMode(Client* client, Channel* channel, const std::string& modeFlags, std::vector<std::string>& modeParams)
