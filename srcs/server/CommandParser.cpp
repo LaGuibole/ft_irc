@@ -119,13 +119,11 @@ void CommandParser::process(int clientFd, const std::string& command,
 }
 
 void CommandParser::handleTopic(Client* client, const std::vector<std::string>& params, ChannelManager& channelManager) {
-	if (params.empty())
+	if (params.size() <= 0)
 	{
 		client->reply(":localhost " + std::string(ERR_NEEDMOREPARAMS) + " TOPIC :Not enough parameters");
 		return;
 	}
-	for (int i = 0; i < int(params.size()); i++)
-		std::cout << params[i] << " : " << i << std::endl;
 	const std::string channel_name = params[0];
 	if (!channelManager.validateChannelName(channel_name, client))
 		return;
@@ -142,10 +140,7 @@ void CommandParser::handleTopic(Client* client, const std::vector<std::string>& 
 		return;
 	}
 	else if (params.size() == 2 && ((channel->isTopicRestricted() && channel->isOperator(client)) || !channel->isTopicRestricted())) {
-		if (params[1] == ":")
-			channel->setTopic(NULL);
-		else
-			channel->setTopic(params[1]);
+		channel->setTopic(params[1]);
 	}
 }
 
@@ -383,7 +378,7 @@ void CommandParser::handleInvite(Client* client, std::vector<std::string>& args,
 		return;
 	}
 	else if (channel && channel->isMember(target)) {
-		Utils::sendError(client, ERR_USERONCHANNEL, channel_name, ":is already on channel");
+		Utils::sendError(client, ERR_USERONCHANNEL, target->getNickname(), ":is already on channel");
 		return;
 	}
 	if (channel && channel->isInviteOnly() && !channel->isOperator(client)) {
@@ -391,6 +386,7 @@ void CommandParser::handleInvite(Client* client, std::vector<std::string>& args,
 		return;
 	}
 	// voir pour ajouter le membre grace a l'invite en mode invite only avec guillaume
+	//
     client->reply(":localhost " + std::string(RPL_INVITING) + " " + client->getNickname() + " " + target->getNickname() + " " + args[1]);
 	target->reply(":" + client->getNickname() + " INVITE " + target->getNickname() + " :" + channel_name);
 }
