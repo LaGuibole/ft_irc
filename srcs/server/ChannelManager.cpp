@@ -59,6 +59,12 @@ Channel* ChannelManager::getChannel(const std::string& name)
 void ChannelManager::removeClientFromAll(Client* client)
 {
     for (std::map<std::string, Channel*>::iterator it = _channels.begin(); it != _channels.end(); ++it)
-        it->second->removeMember(client);
+        it->second->removeMember(client, this);
     // Ici faudra faire la suite dans le cas où Delete le channel si y'a pas de ienclis
+}
+
+void ChannelManager::removeChannel(Channel* channel)
+{
+	_channels.erase(channel->getName());
+	channel->~Channel();
 }

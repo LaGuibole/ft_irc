@@ -1,10 +1,12 @@
-#ifndef CHANNEL_HPP
-#define CHANNEL_HPP
+#pragma once
 
 #include <string>
 #include <map>
 #include <vector>
 #include "Client.hpp"
+#include "ChannelManager.hpp"
+
+class ChannelManager;
 
 /**
  * @brief Classe Channel pour gérer les membres et opérateur
@@ -31,10 +33,11 @@ class Channel {
         const std::string& getTopic() const { return _topic; }
         bool hasUserLimit() const { return _hasUserLimit; }
         size_t getUserLimit() const { return _userLimit; }
+        bool isInviteOnly() const { return _inviteOnly; }
+        bool isTopicRestricted() const { return _topicRestricted; }
         std::vector<Client*> getMembers() const;
         std::string getModeString() const;
         Client* getMemberByNickname(const std::string& nickname) const;
-
         /**
          * @brief Vérifie si un client est membre ou non
          * @param client Client à checker
@@ -82,7 +85,11 @@ class Channel {
          * @brief Tej un client du channel
          * @param client Client à tej
          */
-        void removeMember(Client* client);
+        void removeMember(Client* client, ChannelManager* channel);
+
+        void changeInviteMode();
+
+        void changeTopicMode();
 
         /**
          * @brief Broadcast un message à tous les membres
@@ -93,5 +100,3 @@ class Channel {
 
         void setTopic(const std::string& topic) { _topic = topic; }
 };
-
-#endif
