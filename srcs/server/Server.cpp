@@ -141,7 +141,7 @@ void Server::handleClientData(int clientFd)
     size_t pos = 0;
     static std::map<int, int> realErrorCounts;
     static std::map<int, std::string> lastNickAttempt;
-    
+
     while ((pos = buf.find("\r\n")) != std::string::npos)
     {
         std::string command = buf.substr(0, pos);
@@ -159,7 +159,7 @@ void Server::handleClientData(int clientFd)
             std::string token = command.substr(start);
             if (!token.empty())
                 parts.push_back(token);
-            
+
             if (!parts.empty())
             {
                 std::string cmd = parts[0];
@@ -174,8 +174,8 @@ void Server::handleClientData(int clientFd)
                 }
             }
         }
-        
-        CommandParser::process(clientFd, command, _clients, _channelManager, _password);
+
+        CommandParser::process(clientFd, command, _clients, _channelManager, _password, *this);
         client->eraseFromBuffer(0, pos + 2);
 
         if (client->shouldDisconnect())

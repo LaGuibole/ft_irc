@@ -8,6 +8,8 @@
 #include "ChannelManager.hpp"
 #include "CommandParser.hpp"
 
+class CommandParser;
+
 /**
  * @brief Classe Server pour gérer le réseau et les iencli
  */

@@ -31,7 +31,8 @@ std::string CommandParser::getMessage(const std::string& command)
 void CommandParser::process(int clientFd, const std::string& command,
                             std::map<int, Client*>& clients,
                             ChannelManager& channelManager,
-                            const std::string& password)
+                            const std::string& password,
+                            Server &server)
 {
     if (command.empty())
         return;
@@ -73,7 +74,7 @@ void CommandParser::process(int clientFd, const std::string& command,
         else if (cmd == "INVITE")
             handleInvite(client, params, clients, channelManager);
         else if (cmd == "QUIT")
-            handleQuit(client, command, channelManager);
+            handleQuit(client, command, channelManager, server);
         else if (cmd == "KICK")
             handleKick(client, params, channelManager);
         else if (cmd == "MODE")
@@ -314,13 +315,13 @@ void CommandParser::handlePrivmsg(Client* client, const std::string& command, co
     }
 }
 
-void CommandParser::handleQuit(Client* client, const std::string& command, ChannelManager& channelManager)
+void CommandParser::handleQuit(Client* client, const std::string& command, ChannelManager& channelManager, Server& server)
 {
     std::string message = getMessage(command);
     std::string quitMsg = ":" + client->getPrefix() + " QUIT :" + (message.empty() ? "Quit" : message);
     // A add un Broadcast ici pour plus tard
     client->reply(":localhost quit.");
-    channelManager.removeClientFromAll(client);
+    server.removeClient(client->getFileDescriptor());
 }
 
 void CommandParser::handleInvite(Client* client, std::vector<std::string>& args, const std::map<int, Client*>& clients, ChannelManager& channelManager) {
