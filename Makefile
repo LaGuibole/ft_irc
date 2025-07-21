@@ -6,7 +6,7 @@
 #    By: guphilip <guphilip@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2025/06/16 20:28:22 by guillaumeph       #+#    #+#              #
-#    Updated: 2025/07/15 15:09:37 by guphilip         ###   ########.fr        #
+#    Updated: 2025/07/21 09:42:44 by guphilip         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -22,7 +22,6 @@ INC_DIR     := includes
 SRCS        := \
 	srcs/channel/Channel.cpp \
 	srcs/client/Client.cpp \
-	srcs/fehwfhewuo.cpp \
 	srcs/main.cpp \
 	srcs/server/ChannelManager.cpp \
 	srcs/server/CommandParser.cpp \
