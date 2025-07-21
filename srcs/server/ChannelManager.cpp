@@ -83,9 +83,3 @@ void ChannelManager::removeChannel(Channel* channel)
     _channels.erase(channel->getName());
     delete channel;
 }
-
-void ChannelManager::removeChannel(Channel* channel)
-{
-	_channels.erase(channel->getName());
-	channel->~Channel();
-}

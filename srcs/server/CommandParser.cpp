@@ -351,6 +351,7 @@ void CommandParser::handlePrivmsg(Client* client, const std::string& command, co
 
 void CommandParser::handleQuit(Client* client, const std::string& command, ChannelManager& channelManager, Server& server)
 {
+    (void)channelManager;
     std::string message = getMessage(command);
     std::string quitMsg = ":" + client->getPrefix() + " QUIT :" + (message.empty() ? "Quit" : message);
     // A add un Broadcast ici pour plus tard
