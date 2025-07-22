@@ -90,7 +90,6 @@ class Channel {
          */
         void removeMember(Client* client, ChannelManager* channel);
 
-        void changeInviteMode();
 
         void changeTopicMode();
 
@@ -103,7 +102,7 @@ class Channel {
 
         void setTopic(const std::string& topic) { _topic = topic; }
 
-        void setInviteOnly(bool enabled) { _inviteOnly = true; }
+        void setInviteOnly(bool enabled) { this->_inviteOnly = enabled; }
 
         bool isInvited(Client* client) const;
 

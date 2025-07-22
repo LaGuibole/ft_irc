@@ -108,14 +108,6 @@ void Channel::unsetUserLimit()
     _userLimit = 0;
 }
 
-void Channel::changeInviteMode()
-{
-    if (this->_inviteOnly)
-        this->_inviteOnly = false;
-    else
-        this->_inviteOnly = true;
-}
-
 void Channel::changeTopicMode()
 {
     if (this->_topicRestricted)
