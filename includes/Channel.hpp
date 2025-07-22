@@ -16,7 +16,8 @@ class Channel {
         std::string _name;                  /** Nom du channel */
         std::string _topic;                 /** Topic du channel */
         std::map<int, Client*> _members;    /** Membres du channel */
-		std::map<int, Client*> _operators;  /** Opérateurs du channel */
+        std::map<int, Client*> _operators;  /** Opérateurs du channel */
+        std::map<int, Client*> _pendingInvites; /** Liste des clients invites en invite only channel */
 
         bool _inviteOnly;
         bool _topicRestricted;
@@ -24,6 +25,7 @@ class Channel {
         bool _hasPassword;
         size_t _userLimit;                  /** Limite d'utilisateurs */
         bool _hasUserLimit;                 /** Si la limite est activée */
+
 
     public:
         Channel(const std::string& name);
@@ -35,6 +37,7 @@ class Channel {
         size_t getUserLimit() const { return _userLimit; }
         bool isInviteOnly() const { return _inviteOnly; }
         bool isTopicRestricted() const { return _topicRestricted; }
+
         std::vector<Client*> getMembers() const;
         std::string getModeString() const;
         Client* getMemberByNickname(const std::string& nickname) const;
@@ -87,7 +90,6 @@ class Channel {
          */
         void removeMember(Client* client, ChannelManager* channel);
 
-        void changeInviteMode();
 
         void changeTopicMode();
 
@@ -99,4 +101,12 @@ class Channel {
         void broadcast(const std::string& message, Client* exclude = NULL);
 
         void setTopic(const std::string& topic) { _topic = topic; }
+
+        void setInviteOnly(bool enabled) { this->_inviteOnly = enabled; }
+
+        bool isInvited(Client* client) const;
+
+        void addPendingInvite(Client* client);
+
+        void removeInvite(Client* client);
 };

@@ -108,14 +108,6 @@ void Channel::unsetUserLimit()
     _userLimit = 0;
 }
 
-void Channel::changeInviteMode()
-{
-    if (this->_inviteOnly)
-        this->_inviteOnly = false;
-    else
-        this->_inviteOnly = true;
-}
-
 void Channel::changeTopicMode()
 {
     if (this->_topicRestricted)
@@ -147,4 +139,20 @@ std::string Channel::getModeString() const
     }
 
     return flags + params;
+}
+
+bool Channel::isInvited(Client* client) const
+{
+    return _pendingInvites.find(client->getFileDescriptor()) != _pendingInvites.end();
+}
+
+void Channel::addPendingInvite(Client* client)
+{
+    if (client)
+        _pendingInvites[client->getFileDescriptor()] = client;
+}
+
+void Channel::removeInvite(Client* client)
+{
+    _pendingInvites.erase(client->getFileDescriptor());
 }
