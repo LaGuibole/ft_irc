@@ -402,7 +402,7 @@ void CommandParser::handleInvite(Client* client, std::vector<std::string>& args,
 		return;
 	}
 	else if (channel && channel->isInviteOnly() && channel->isOperator(client))	{
-		channel.addPendingInvites(client);
+//		channel.addPendingInvites(client);
 	}
     client->reply(":localhost " + std::string(RPL_INVITING) + " " + client->getNickname() + " " + target->getNickname() + " " + args[1]);
 	target->reply(":" + client->getNickname() + " INVITE " + target->getNickname() + " :" + channel_name);
