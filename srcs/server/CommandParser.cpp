@@ -126,14 +126,13 @@ void CommandParser::handleTopic(Client* client, const std::vector<std::string>& 
 		client->reply(":localhost " + std::string(ERR_NEEDMOREPARAMS) + " TOPIC :Not enough parameters");
 		return;
 	}
-	for (int i = 0; i < int(params.size()); i++)
-		std::cout << params[i] << " : " << i << std::endl;
-	const std::string channel_name = params[0];
+	const std::string& channel_name = params[0];
 	if (!channelManager.validateChannelName(channel_name, client))
 		return;
+
 	Channel* channel = channelManager.getChannel(channel_name);
 	if (!channel) {
-		client->reply(":localhost " + std::string(ERR_NOTONCHANNEL) + " " +channel_name + " :You're not on that channel");
+		client->reply(":localhost " + std::string(ERR_NOTONCHANNEL) + " " + channel_name + " :You're not on that channel");
 		return;
 	}
 	if (params.size() == 1) {
@@ -351,6 +350,7 @@ void CommandParser::handlePrivmsg(Client* client, const std::string& command, co
 
 void CommandParser::handleQuit(Client* client, const std::string& command, ChannelManager& channelManager, Server& server)
 {
+	(void)channelManager;
     std::string message = getMessage(command);
     std::string quitMsg = ":" + client->getPrefix() + " QUIT :" + (message.empty() ? "Quit" : message);
     // A add un Broadcast ici pour plus tard
@@ -392,7 +392,10 @@ void CommandParser::handleInvite(Client* client, std::vector<std::string>& args,
 		Utils::sendError(client, ERR_CHANOPRIVSNEEDED, channel->getName(), ":You're not channel operator");
 		return;
 	}
-	// voir pour ajouter le membre grace a l'invite en mode invite only avec guillaume
+	else if (channel && channel->isInviteOnly() && channel->isOperator(client))
+	{
+		//Methode d'ajout a la liste d'invitation
+	}
     client->reply(":localhost " + std::string(RPL_INVITING) + " " + client->getNickname() + " " + target->getNickname() + " " + args[1]);
 	target->reply(":" + client->getNickname() + " INVITE " + target->getNickname() + " :" + channel_name);
 }
