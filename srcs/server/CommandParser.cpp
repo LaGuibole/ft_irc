@@ -398,9 +398,8 @@ void CommandParser::handleInvite(Client* client, std::vector<std::string>& args,
 		Utils::sendError(client, ERR_CHANOPRIVSNEEDED, channel->getName(), ":You're not channel operator");
 		return;
 	}
-	else if (channel && channel->isInviteOnly() && channel->isOperator(client))
-	{
-		//Methode d'ajout a la liste d'invitation (std::map(int, client))
+	else if (channel && channel->isInviteOnly() && channel->isOperator(client))	{
+		channel.addPendingInvites(client);
 	}
     client->reply(":localhost " + std::string(RPL_INVITING) + " " + client->getNickname() + " " + target->getNickname() + " " + args[1]);
 	target->reply(":" + client->getNickname() + " INVITE " + target->getNickname() + " :" + channel_name);
