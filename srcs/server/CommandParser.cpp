@@ -260,7 +260,7 @@ void CommandParser::handleJoin(Client* client, const std::vector<std::string>& p
     }
     if (channel->isInviteOnly() && !channel->isInvited(client))
     {
-        client->reply(":localhost " + std::string(ERR_INVITEONLYCHAN) + " " + channelName + " :Cannot join channel (+i)");
+        client->reply(":localhost " + std::string(ERR_INVITEONLYCHAN) + " " + client->getNickname() + " " + channelName + " :Cannot join channel (+i)");
         return ;
     }
 
