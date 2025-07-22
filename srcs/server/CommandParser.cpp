@@ -121,34 +121,39 @@ void CommandParser::process(int clientFd, const std::string& command,
 }
 
 void CommandParser::handleTopic(Client* client, const std::vector<std::string>& params, ChannelManager& channelManager) {
-	if (params.empty())
-	{
+	if (params.empty())	{
 		client->reply(":localhost " + std::string(ERR_NEEDMOREPARAMS) + " TOPIC :Not enough parameters");
 		return;
 	}
-	for (int i = 0; i < int(params.size()); i++)
-		std::cout << params[i] << " : " << i << std::endl;
-	const std::string channel_name = params[0];
+	const std::string& channel_name = params[0];
 	if (!channelManager.validateChannelName(channel_name, client))
 		return;
+
 	Channel* channel = channelManager.getChannel(channel_name);
-	if (!channel) {
-		client->reply(":localhost " + std::string(ERR_NOTONCHANNEL) + " " +channel_name + " :You're not on that channel");
+	if (!channel || !channel->isMember(client)) {
+		client->reply(":localhost " + std::string(ERR_NOTONCHANNEL) + " " + channel_name + " :You're not on that channel");
 		return;
 	}
 	if (params.size() == 1) {
-		if (channel->getTopic().empty())
-			client->reply(":localhost " + std::string(RPL_NOTOPIC) + " :No topic is set");
+		const std::string& topic = channel->getTopic();
+		if (topic.empty())
+			client->reply(":localhost " + std::string(RPL_NOTOPIC) + " " + channel_name + " :No topic is set");
 		else
-			client->reply(":localhost " + std::string(RPL_TOPIC) + " :" + channel->getTopic() + " " + channel_name);
+			client->reply(":localhost " + std::string(RPL_TOPIC) + " " + channel_name + " :" + topic);
 		return;
 	}
-	else if (params.size() == 2 && ((channel->isTopicRestricted() && channel->isOperator(client)) || !channel->isTopicRestricted())) {
-		if (params[1] == ":")
-			channel->setTopic(NULL);
-		else
-			channel->setTopic(params[1]);
+
+	std::string new_topic;
+	if (params.size() >= 2) {
+		new_topic = params[1];
+		for (size_t i = 2; i < params.size(); ++i)
+			new_topic += " " + params[i];
+		if (!new_topic.empty() && new_topic[0] == ':')
+			new_topic = new_topic.substr(1);
 	}
+
+	channel->setTopic(new_topic);
+	channel->broadcast(":" + client->getPrefix() + " TOPIC " + channel_name + " :" + new_topic);
 }
 
 void CommandParser::handlePass(Client* client, const std::vector<std::string>& params, const std::string& password)
@@ -357,7 +362,7 @@ void CommandParser::handlePrivmsg(Client* client, const std::string& command, co
 
 void CommandParser::handleQuit(Client* client, const std::string& command, ChannelManager& channelManager, Server& server)
 {
-    (void)channelManager;
+	(void)channelManager;
     std::string message = getMessage(command);
     std::string quitMsg = ":" + client->getPrefix() + " QUIT :" + (message.empty() ? "Quit" : message);
     // A add un Broadcast ici pour plus tard
@@ -399,7 +404,9 @@ void CommandParser::handleInvite(Client* client, std::vector<std::string>& args,
 		Utils::sendError(client, ERR_CHANOPRIVSNEEDED, channel->getName(), ":You're not channel operator");
 		return;
 	}
-	// voir pour ajouter le membre grace a l'invite en mode invite only avec guillaume
+	else if (channel && channel->isInviteOnly() && channel->isOperator(client))	{
+		channel.addPendingInvites(client);
+	}
     client->reply(":localhost " + std::string(RPL_INVITING) + " " + client->getNickname() + " " + target->getNickname() + " " + args[1]);
 	target->reply(":" + client->getNickname() + " INVITE " + target->getNickname() + " :" + channel_name);
 }
