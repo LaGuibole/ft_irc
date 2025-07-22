@@ -152,6 +152,12 @@ void CommandParser::handleTopic(Client* client, const std::vector<std::string>& 
 			new_topic = new_topic.substr(1);
 	}
 
+    if (channel->isTopicRestricted() && !channel->isOperator(client))
+    {
+        client->reply(":localhost " + std::string(ERR_CHANOPRIVSNEEDED) + " " + channel_name + " :You're not channel operator");
+        return ;
+    }
+
 	channel->setTopic(new_topic);
 	channel->broadcast(":" + client->getPrefix() + " TOPIC " + channel_name + " :" + new_topic);
 }
@@ -566,6 +572,15 @@ void CommandParser::applyChannelMode(Client* client, Channel* channel, const std
                 else
                     channel->unsetPassword();
                 modeChanges += "k";
+                break;
+            }
+            case 't':
+            {
+                if (adding)
+                    channel->setTopicRestricted(true);
+                else
+                    channel->setTopicRestricted(false);
+                modeChanges += "t";
                 break;
             }
             default:

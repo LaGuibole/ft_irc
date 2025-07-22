@@ -117,4 +117,6 @@ class Channel {
         bool hasPassword() const { return _hasPassword; }
 
         const std::string& getPassword() const { return _password; }
+
+        void setTopicRestricted(bool enabled) { this->_topicRestricted = enabled; }
 };
