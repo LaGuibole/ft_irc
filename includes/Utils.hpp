@@ -2,6 +2,7 @@
 
 #include <string>
 #include <vector>
+#include <sstream>
 #include "Client.hpp"
 
 /**
@@ -15,4 +16,5 @@ namespace Utils {
      */
     void sendError(Client* client, const std::string& code, const std::string& target, const std::string& message);
 	std::string trim(const std::string& str);
+    std::string toString(int value);
 }

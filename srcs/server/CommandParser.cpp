@@ -258,10 +258,25 @@ void CommandParser::handleJoin(Client* client, const std::vector<std::string>& p
         client->reply(":localhost " + std::string(ERR_CHANNELISFULL) + " " + client->getNickname() + " " + channelName + " :Cannot join channel (+l)");
         return ;
     }
+    // verif invite
     if (channel->isInviteOnly() && !channel->isInvited(client))
     {
         client->reply(":localhost " + std::string(ERR_INVITEONLYCHAN) + " " + client->getNickname() + " " + channelName + " :Cannot join channel (+i)");
         return ;
+    }
+    // verif password
+    if (channel->hasPassword())
+    {
+        if (params.size() < 2)
+        {
+            client->reply(":localhost " + std::string(ERR_BADCHANNELKEY) + " " + client->getNickname() + " " + channelName + " :Cannot join channel (+k)");
+            return ;
+        }
+        if (params[1] != channel->getPassword())
+        {
+            client->reply(":localhost " + std::string(ERR_BADCHANNELKEY) + " " + client->getNickname() + " " + channelName + " :Cannot join channel (+k)");
+            return ;
+        }
     }
 
     channel->addMember(client);
@@ -463,6 +478,9 @@ void CommandParser::applyChannelMode(Client* client, Channel* channel, const std
     bool adding = true;
     size_t paramIndex = 0;
 
+    std::string modeChanges;
+    std::string modeParamsStr;
+
     for (size_t i = 0; i < modeFlags.size(); ++i)
     {
         char mode = modeFlags[i];
@@ -470,11 +488,13 @@ void CommandParser::applyChannelMode(Client* client, Channel* channel, const std
         if (mode == '+')
         {
             adding = true;
+            modeChanges += "+";
             continue;
         }
         else if (mode == '-')
         {
             adding = false;
+            modeChanges += "-";
             continue;
         }
 
@@ -499,8 +519,8 @@ void CommandParser::applyChannelMode(Client* client, Channel* channel, const std
                 else
                     channel->removeOperator(target);
 
-                std::string modeMsg = ":" + client->getPrefix() + " MODE " + channel->getName() + " " + (adding ? "+o " : "-o ") + targetNick;
-                channel->broadcast(modeMsg);
+                modeChanges += "o";
+                modeParamsStr += " " + targetNick;
                 break;
             }
             case 'l':
@@ -514,9 +534,11 @@ void CommandParser::applyChannelMode(Client* client, Channel* channel, const std
                     }
                     int limit = atoi(modeParams[paramIndex++].c_str());
                     channel->setUserLimit(limit);
+                    modeParamsStr += " " + Utils::toString(limit);
                 }
                 else
                     channel->unsetUserLimit();
+                modeChanges += "l";
                 break;
             }
             case 'i':
@@ -525,14 +547,36 @@ void CommandParser::applyChannelMode(Client* client, Channel* channel, const std
                     channel->setInviteOnly(true);
                 else
                     channel->setInviteOnly(false);
-                std::string modeMsg = ":" + client->getPrefix() + " MODE " + channel->getName() + " " + (adding ? "+i" : "-i");
-                channel->broadcast(modeMsg);
+                modeChanges += "i";
+                break;
+            }
+            case 'k':
+            {
+                if (adding)
+                {
+                    if (paramIndex >= modeParams.size())
+                    {
+                        client->reply(":localhost " + std::string(ERR_NEEDMOREPARAMS) + " MODE: Missing parameter for mode k");
+                        return ;
+                    }
+                    std::string password = modeParams[paramIndex++];
+                    channel->setPassword(password);
+                    modeParamsStr += " " + password;
+                }
+                else
+                    channel->unsetPassword();
+                modeChanges += "k";
                 break;
             }
             default:
                 client->reply(":localhost " + std::string(ERR_UNKNOWNMODE) + " " + mode + " :is not a supported mode (yet)");
                 break;
         }
+    }
+    if (!modeChanges.empty())
+    {
+        std::string modeMsg = ":" + client->getPrefix() + " MODE " + channel->getName() + " " + modeChanges + modeParamsStr;
+        channel->broadcast(modeMsg);
     }
 }
 

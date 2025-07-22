@@ -156,3 +156,15 @@ void Channel::removeInvite(Client* client)
 {
     _pendingInvites.erase(client->getFileDescriptor());
 }
+
+void Channel::setPassword(const std::string& password)
+{
+    _hasPassword = true;
+    _password = password;
+}
+
+void Channel::unsetPassword()
+{
+    _hasPassword = false;
+    _password.clear();
+}
