@@ -263,8 +263,11 @@ void CommandParser::handleJoin(Client* client, const std::vector<std::string>& p
         client->reply(":localhost " + std::string(ERR_INVITEONLYCHAN) + " " + channelName + " :Cannot join channel (+i)");
         return ;
     }
+
     channel->addMember(client);
-    channel->removeInvite(client); /** supprimer le client de la liste d'invite pour pas qu'il l'utilise de nouveau*/
+
+    if (channel->isInvited(client))
+        channel->removeInvite(client); /** supprimer le client de la liste d'invite pour pas qu'il l'utilise de nouveau*/
 
     // si premier utilisateur : promu automatiquement en operateur
     if (channel->getMembers().size() == 1)
@@ -405,7 +408,7 @@ void CommandParser::handleInvite(Client* client, std::vector<std::string>& args,
 		return;
 	}
 	else if (channel && channel->isInviteOnly() && channel->isOperator(client))	{
-		channel.addPendingInvites(client);
+		channel->addPendingInvite(target);
 	}
     client->reply(":localhost " + std::string(RPL_INVITING) + " " + client->getNickname() + " " + target->getNickname() + " " + args[1]);
 	target->reply(":" + client->getNickname() + " INVITE " + target->getNickname() + " :" + channel_name);
