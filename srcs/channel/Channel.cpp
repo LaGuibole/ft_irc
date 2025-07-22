@@ -148,3 +148,19 @@ std::string Channel::getModeString() const
 
     return flags + params;
 }
+
+bool Channel::isInvited(Client* client) const
+{
+    return _pendingInvites.find(client->getFileDescriptor()) != _pendingInvites.end();
+}
+
+void Channel::addPendingInvite(Client* client)
+{
+    if (client)
+        _pendingInvites[client->getFileDescriptor()] = client;
+}
+
+void Channel::removeInvite(Client* client)
+{
+    _pendingInvites.erase(client->getFileDescriptor());
+}
