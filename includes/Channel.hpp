@@ -16,7 +16,7 @@ class Channel {
         std::string _name;                  /** Nom du channel */
         std::string _topic;                 /** Topic du channel */
         std::map<int, Client*> _members;    /** Membres du channel */
-        std::map<int, Client*> _operators;  /** Opérateurs du channel */
+		std::map<int, Client*> _operators;  /** Opérateurs du channel */
 
         bool _inviteOnly;
         bool _topicRestricted;
