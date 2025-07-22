@@ -32,7 +32,7 @@ void CommandParser::process(int clientFd, const std::string& command,
                             std::map<int, Client*>& clients,
                             ChannelManager& channelManager,
                             const std::string& password,
-                            Server &server)
+                            Server& server)
 {
     if (command.empty())
         return;
@@ -258,7 +258,13 @@ void CommandParser::handleJoin(Client* client, const std::vector<std::string>& p
         client->reply(":localhost " + std::string(ERR_CHANNELISFULL) + " " + client->getNickname() + " " + channelName + " :Cannot join channel (+l)");
         return ;
     }
+    if (channel->isInviteOnly() && !channel->isInvited(client))
+    {
+        client->reply(":localhost " + std::string(ERR_INVITEONLYCHAN) + " " + channelName + " :Cannot join channel (+i)");
+        return ;
+    }
     channel->addMember(client);
+    channel->removeInvite(client); /** supprimer le client de la liste d'invite pour pas qu'il l'utilise de nouveau*/
 
     // si premier utilisateur : promu automatiquement en operateur
     if (channel->getMembers().size() == 1)
@@ -508,6 +514,16 @@ void CommandParser::applyChannelMode(Client* client, Channel* channel, const std
                 }
                 else
                     channel->unsetUserLimit();
+                break;
+            }
+            case 'i':
+            {
+                if (adding)
+                    channel->setInviteOnly(true);
+                else
+                    channel->setInviteOnly(false);
+                std::string modeMsg = ":" + client->getPrefix() + " MODE " + channel->getName() + " " + (adding ? "+i" : "-i");
+                channel->broadcast(modeMsg);
                 break;
             }
             default:
