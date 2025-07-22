@@ -2,9 +2,9 @@
 #include <iostream>
 #include <sstream>
 
-Channel::Channel(const std::string& name) 
-    : _name(name), _topic(""), _inviteOnly(false), _topicRestricted(false), 
-      _password(""), _hasPassword(false), _userLimit(0), _hasUserLimit(false), _isTopicRestricted(false)
+Channel::Channel(const std::string& name)
+    : _name(name), _topic(""), _inviteOnly(false), _topicRestricted(false),
+      _password(""), _hasPassword(false), _userLimit(0), _hasUserLimit(false)
 {
     std::cout << "New channel created: " << this->_name << std::endl;
 }
@@ -49,13 +49,15 @@ void Channel::addMember(Client* client)
     std::cout << "Client " << client->getNickname() << " joined " << _name << std::endl;
 }
 
-void Channel::removeMember(Client* client)
+void Channel::removeMember(Client* client, ChannelManager* channel)
 {
     if (!client || !isMember(client))
         return;
     _members.erase(client->getFileDescriptor());
     _operators.erase(client->getFileDescriptor());
     std::cout << "Client " << client->getNickname() << " left " << _name << std::endl;
+    if (this->getMembers().size() == 0 && channel)
+        channel->removeChannel(this);
 }
 
 void Channel::broadcast(const std::string& message, Client* exclude)
@@ -97,7 +99,7 @@ void Channel::setUserLimit(int limit)
     if (limit <= 0)
         return ;
     _hasUserLimit = true;
-    _userLimit = static_cast<size_t>(limit);
+    _userLimit = limit;
 }
 
 void Channel::unsetUserLimit()
@@ -108,17 +110,18 @@ void Channel::unsetUserLimit()
 
 void Channel::changeInviteMode()
 {
-	if (this->_inviteOnly)
-		this->_inviteOnly = false;
-	else
-		this->_inviteOnly = true;
+    if (this->_inviteOnly)
+        this->_inviteOnly = false;
+    else
+        this->_inviteOnly = true;
 }
 
-void Channel::changeTopicMode() {
-	if (this->_topicRestricted)
-		this->_topicRestricted = false;
-	else
-		this->_topicRestricted = true;
+void Channel::changeTopicMode()
+{
+    if (this->_topicRestricted)
+        this->_topicRestricted = false;
+    else
+        this->_topicRestricted = true;
 }
 
 std::string Channel::getModeString() const

@@ -1,10 +1,12 @@
-#ifndef CHANNEL_HPP
-#define CHANNEL_HPP
+#pragma once
 
 #include <string>
 #include <map>
 #include <vector>
 #include "Client.hpp"
+#include "ChannelManager.hpp"
+
+class ChannelManager;
 
 /**
  * @brief Classe Channel pour gérer les membres et opérateur
@@ -21,8 +23,7 @@ class Channel {
         std::string _password;
         bool _hasPassword;
         size_t _userLimit;                  /** Limite d'utilisateurs */
-		bool _hasUserLimit;                 /** Si la limite est activée */
-		bool _isTopicRestricted;                 /** Si la limite est activée */
+        bool _hasUserLimit;                 /** Si la limite est activée */
 
     public:
         Channel(const std::string& name);
@@ -31,17 +32,12 @@ class Channel {
         const std::string& getName() const { return _name; }
         const std::string& getTopic() const { return _topic; }
         bool hasUserLimit() const { return _hasUserLimit; }
-		bool isInviteOnly() const { return _inviteOnly; }
-		bool isTopicRestricted() const { return _isTopicRestricted; }
         size_t getUserLimit() const { return _userLimit; }
+        bool isInviteOnly() const { return _inviteOnly; }
+        bool isTopicRestricted() const { return _topicRestricted; }
         std::vector<Client*> getMembers() const;
         std::string getModeString() const;
         Client* getMemberByNickname(const std::string& nickname) const;
-
-		///L'appel de ces fonctions inverse le mode concerne
-		void changeInviteMode();
-		void changeTopicMode();
-
         /**
          * @brief Vérifie si un client est membre ou non
          * @param client Client à checker
@@ -89,7 +85,11 @@ class Channel {
          * @brief Tej un client du channel
          * @param client Client à tej
          */
-        void removeMember(Client* client);
+        void removeMember(Client* client, ChannelManager* channel);
+
+        void changeInviteMode();
+
+        void changeTopicMode();
 
         /**
          * @brief Broadcast un message à tous les membres
@@ -100,5 +100,3 @@ class Channel {
 
         void setTopic(const std::string& topic) { _topic = topic; }
 };
-
-#endif

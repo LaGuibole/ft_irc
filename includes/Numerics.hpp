@@ -1,5 +1,4 @@
-#ifndef NUMERICS_HPP
-# define NUMERICS_HPP
+#pragma once
 
 #define RPL_WELCOME "001"
 #define RPL_YOURHOST "002"
@@ -14,6 +13,7 @@
 #define RPL_NAMREPLY "353"
 #define RPL_ENDOFNAMES "366"
 #define RPL_CHANNELMODEIS "324"
+#define RPL_NOTOPIC "331"
 // Section 5.2 Des cas d'erreur du site que
 // Guillaume nous a drop a en add si besoin
 #define ERR_NOSUCHNICK "401"
@@ -35,5 +35,4 @@
 #define ERR_USERSDONTMATCH "502"
 #define ERR_CHANNELISFULL "471"
 #define ERR_UNKNOWNMODE "472"
-
-#endif
+#define ERR_USERONCHANNEL "443"

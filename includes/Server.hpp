@@ -1,5 +1,4 @@
-#ifndef SERVER_HPP
-#define SERVER_HPP
+#pragma once
 
 #include <vector>
 #include <map>
@@ -8,6 +7,8 @@
 #include "Client.hpp"
 #include "ChannelManager.hpp"
 #include "CommandParser.hpp"
+
+class CommandParser;
 
 /**
  * @brief Classe Server pour gérer le réseau et les iencli
@@ -67,5 +68,3 @@ class Server {
          */
         void removeClient(int clientFd);
 };
-
-#endif

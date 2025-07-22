@@ -31,7 +31,8 @@ std::string CommandParser::getMessage(const std::string& command)
 void CommandParser::process(int clientFd, const std::string& command,
                             std::map<int, Client*>& clients,
                             ChannelManager& channelManager,
-                            const std::string& password)
+                            const std::string& password,
+                            Server &server)
 {
     if (command.empty())
         return;
@@ -64,6 +65,7 @@ void CommandParser::process(int clientFd, const std::string& command,
     else if (cmd == "WHO")
         handleWho(client, params, clients, channelManager);
     else if (client->isRegistered()) {
+        std::cout << client->getNickname() << " called " << cmd << std::endl; // debug
         if (cmd == "JOIN")
             handleJoin(client, params, channelManager);
         else if (cmd == "PART")
@@ -73,13 +75,13 @@ void CommandParser::process(int clientFd, const std::string& command,
         else if (cmd == "INVITE")
             handleInvite(client, params, clients, channelManager);
         else if (cmd == "QUIT")
-            handleQuit(client, command, channelManager);
+            handleQuit(client, command, channelManager, server);
         else if (cmd == "KICK")
             handleKick(client, params, channelManager);
         else if (cmd == "MODE")
             handleMode(client, params, channelManager);
-		else if (cmd == "TOPIC")
-			handleTopic(client, params, channelManager);
+        else if (cmd == "TOPIC")
+            handleTopic(client, params, channelManager);
         else
             client->reply(":localhost " + std::string(ERR_UNKNOWNCOMMAND) + " " + cmd + " :Unknown command");
     } else {
@@ -119,11 +121,13 @@ void CommandParser::process(int clientFd, const std::string& command,
 }
 
 void CommandParser::handleTopic(Client* client, const std::vector<std::string>& params, ChannelManager& channelManager) {
-	if (params.size() <= 0)
+	if (params.empty())
 	{
 		client->reply(":localhost " + std::string(ERR_NEEDMOREPARAMS) + " TOPIC :Not enough parameters");
 		return;
 	}
+	for (int i = 0; i < int(params.size()); i++)
+		std::cout << params[i] << " : " << i << std::endl;
 	const std::string channel_name = params[0];
 	if (!channelManager.validateChannelName(channel_name, client))
 		return;
@@ -140,7 +144,10 @@ void CommandParser::handleTopic(Client* client, const std::vector<std::string>& 
 		return;
 	}
 	else if (params.size() == 2 && ((channel->isTopicRestricted() && channel->isOperator(client)) || !channel->isTopicRestricted())) {
-		channel->setTopic(params[1]);
+		if (params[1] == ":")
+			channel->setTopic(NULL);
+		else
+			channel->setTopic(params[1]);
 	}
 }
 
@@ -176,11 +183,11 @@ void CommandParser::handleNick(Client* client, const std::vector<std::string>& p
         client->reply(":localhost " + std::string(ERR_NONICKNAMEGIVEN) + " :No nickname given");
         return;
     }
-    
+
     std::string newNick = params[0];
     if (client->getNickname() == newNick)
         return;
-    
+
     for (std::map<int, Client*>::const_iterator it = clients.begin(); it != clients.end(); ++it)
     {
         if (it->second != client && it->second->getNickname() == newNick)
@@ -243,7 +250,7 @@ void CommandParser::handleJoin(Client* client, const std::vector<std::string>& p
     // verif de la limite d'user pour mode -l
     if (channel->hasUserLimit() && channel->getMembers().size() >= channel->getUserLimit())
     {
-        client->reply(":localhost " + std::string(ERR_CHANNELISFULL) + client->getNickname() + " " + channelName + " :Cannot join channel (+l)");
+        client->reply(":localhost " + std::string(ERR_CHANNELISFULL) + " " + client->getNickname() + " " + channelName + " :Cannot join channel (+l)");
         return ;
     }
     channel->addMember(client);
@@ -292,7 +299,7 @@ void CommandParser::handlePart(Client* client, const std::vector<std::string>& p
     }
     std::string partMsg = ":" + client->getPrefix() + " PART " + channelName + " :" + (params.size() > 1 ? params[1] : "Leaving");
     channel->broadcast(partMsg);
-    channel->removeMember(client);
+    channel->removeMember(client, &channelManager);
 }
 
 void CommandParser::handlePrivmsg(Client* client, const std::string& command, const std::map<int, Client*>& clients, ChannelManager& channelManager)
@@ -342,13 +349,14 @@ void CommandParser::handlePrivmsg(Client* client, const std::string& command, co
     }
 }
 
-void CommandParser::handleQuit(Client* client, const std::string& command, ChannelManager& channelManager)
+void CommandParser::handleQuit(Client* client, const std::string& command, ChannelManager& channelManager, Server& server)
 {
+    (void)channelManager;
     std::string message = getMessage(command);
     std::string quitMsg = ":" + client->getPrefix() + " QUIT :" + (message.empty() ? "Quit" : message);
     // A add un Broadcast ici pour plus tard
     client->reply(":localhost quit.");
-    channelManager.removeClientFromAll(client);
+    server.removeClient(client->getFileDescriptor());
 }
 
 void CommandParser::handleInvite(Client* client, std::vector<std::string>& args, const std::map<int, Client*>& clients, ChannelManager& channelManager) {
@@ -378,7 +386,7 @@ void CommandParser::handleInvite(Client* client, std::vector<std::string>& args,
 		return;
 	}
 	else if (channel && channel->isMember(target)) {
-		Utils::sendError(client, ERR_USERONCHANNEL, target->getNickname(), ":is already on channel");
+		Utils::sendError(client, ERR_USERONCHANNEL, channel_name, ":is already on channel");
 		return;
 	}
 	if (channel && channel->isInviteOnly() && !channel->isOperator(client)) {
@@ -386,7 +394,6 @@ void CommandParser::handleInvite(Client* client, std::vector<std::string>& args,
 		return;
 	}
 	// voir pour ajouter le membre grace a l'invite en mode invite only avec guillaume
-	//
     client->reply(":localhost " + std::string(RPL_INVITING) + " " + client->getNickname() + " " + target->getNickname() + " " + args[1]);
 	target->reply(":" + client->getNickname() + " INVITE " + target->getNickname() + " :" + channel_name);
 }
@@ -432,7 +439,7 @@ void CommandParser::handleKick(Client* client, const std::vector<std::string>& p
     std::string kickMessage = ":" + client->getPrefix() + " KICK " + channelName + " " + targetNick + " :" + comment;
     target->reply(kickMessage);
     channel->broadcast(kickMessage, target);
-    channel->removeMember(target);
+    channel->removeMember(target, &channelManager);
 }
 
 void CommandParser::applyChannelMode(Client* client, Channel* channel, const std::string& modeFlags, std::vector<std::string>& modeParams)
@@ -571,9 +578,9 @@ void CommandParser::handleWho(Client* client, const std::vector<std::string>& pa
         client->reply(":localhost " + std::string(RPL_ENDOFWHO) + " " + client->getNickname() + " * :End of WHO list");
         return;
     }
-    
+
     std::string target = params[0];
-    
+
     if (target[0] == '#')
     {
         // WHO pour un channel
@@ -583,13 +590,13 @@ void CommandParser::handleWho(Client* client, const std::vector<std::string>& pa
             client->reply(":localhost " + std::string(ERR_NOSUCHCHANNEL) + " " + target + " :No such channel");
             return;
         }
-        
+
         if (!channel->isMember(client))
         {
             client->reply(":localhost " + std::string(ERR_NOTONCHANNEL) + " " + target + " :You're not on that channel");
             return;
         }
-        
+
         std::vector<Client*> members = channel->getMembers();
         for (size_t i = 0; i < members.size(); ++i)
         {
@@ -597,8 +604,8 @@ void CommandParser::handleWho(Client* client, const std::vector<std::string>& pa
             std::string flags = "H";
             if (channel->isOperator(member))
                 flags += "@";
-            client->reply(":localhost 352 " + client->getNickname() + " " + target + " " + 
-                         member->getUsername() + " " + member->getHostname() + " localhost " + 
+            client->reply(":localhost 352 " + client->getNickname() + " " + target + " " +
+                         member->getUsername() + " " + member->getHostname() + " localhost " +
                          member->getNickname() + " " + flags + " :0 " + member->getRealname());
         }
         client->reply(":localhost " + std::string(RPL_ENDOFWHO) + " " + client->getNickname() + " " + target + " :End of WHO list");
@@ -610,8 +617,8 @@ void CommandParser::handleWho(Client* client, const std::vector<std::string>& pa
             if (it->second->getNickname() == target)
             {
                 Client* targetClient = it->second;
-                client->reply(":localhost 352 " + client->getNickname() + " * " + 
-                             targetClient->getUsername() + " " + targetClient->getHostname() + " localhost " + 
+                client->reply(":localhost 352 " + client->getNickname() + " * " +
+                             targetClient->getUsername() + " " + targetClient->getHostname() + " localhost " +
                              targetClient->getNickname() + " H :0 " + targetClient->getRealname());
                 break;
             }
