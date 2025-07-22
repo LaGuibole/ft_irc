@@ -32,7 +32,7 @@ class CommandParser {
         static void handleUser(Client* client, const std::string& command);
         static void handleJoin(Client* client, const std::vector<std::string>& params, ChannelManager& channelManager);
         static void handlePart(Client* client, const std::vector<std::string>& params, ChannelManager& channelManager);
-        static void handlePrivmsg(Client* client, const std::string& command, const std::map<int, Client*>& clients, ChannelManager& channelManager);
+        static void handlePrivmsg(Client* client, const std::string& command, const std::map<int, Client*>& clients, ChannelManager& channelManager, Server& server);
         static void handleQuit(Client* client, const std::string& command, ChannelManager& channelManager, Server &server);
         static void handleInvite(Client* client, std::vector<std::string>& params, const std::map<int, Client*>& clients, ChannelManager& channelManager);
         static void handleKick(Client* client, const std::vector<std::string>& params, ChannelManager& channelManager);

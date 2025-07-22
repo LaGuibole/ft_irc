@@ -71,7 +71,7 @@ void CommandParser::process(int clientFd, const std::string& command,
         else if (cmd == "PART")
             handlePart(client, params, channelManager);
         else if (cmd == "PRIVMSG")
-            handlePrivmsg(client, command, clients, channelManager);
+            handlePrivmsg(client, command, clients, channelManager, server);
         else if (cmd == "INVITE")
             handleInvite(client, params, clients, channelManager);
         else if (cmd == "QUIT")
@@ -337,7 +337,7 @@ void CommandParser::handlePart(Client* client, const std::vector<std::string>& p
     channel->removeMember(client, &channelManager);
 }
 
-void CommandParser::handlePrivmsg(Client* client, const std::string& command, const std::map<int, Client*>& clients, ChannelManager& channelManager)
+void CommandParser::handlePrivmsg(Client* client, const std::string& command, const std::map<int, Client*>& clients, ChannelManager& channelManager, Server& server)
 {
     std::vector<std::string> parts = split(command, ' ');
     if (parts.size() < 3)
@@ -347,6 +347,7 @@ void CommandParser::handlePrivmsg(Client* client, const std::string& command, co
     }
     std::string target = parts[1];
     std::string message = getMessage(command);
+    server.getBot().inspectMessages(client, message);
     if (message.empty())
     {
         client->reply(":localhost " + std::string(ERR_NOTEXTTOSEND) + " :No text to send");
