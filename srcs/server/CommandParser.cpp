@@ -142,7 +142,10 @@ void CommandParser::handleTopic(Client* client, const std::vector<std::string>& 
 			client->reply(":localhost " + std::string(RPL_TOPIC) + " " + channel_name + " :" + topic);
 		return;
 	}
-
+	if (channel->isTopicRestricted() && !channel->isOperator(client)) {
+		client->reply(channel_name + " :You're not channel operator");
+		return;
+	}
 	std::string new_topic;
 	if (params.size() >= 2) {
 		new_topic = params[1];
