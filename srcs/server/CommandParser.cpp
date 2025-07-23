@@ -600,7 +600,7 @@ void CommandParser::applyChannelMode(Client* client, Channel* channel, const std
 
 void CommandParser::handleMode(Client* client, const std::vector<std::string>& params, ChannelManager& channelManager)
 {
-    if (params.empty())
+    if (params.empty()) // a fix
     {
         client->reply(":localhost " + std::string(ERR_NEEDMOREPARAMS) + " MODE :Not enough parameters");
         return ;
