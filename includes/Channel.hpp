@@ -109,4 +109,14 @@ class Channel {
         void addPendingInvite(Client* client);
 
         void removeInvite(Client* client);
+
+        void setPassword(const std::string& password);
+
+        void unsetPassword();
+
+        bool hasPassword() const { return _hasPassword; }
+
+        const std::string& getPassword() const { return _password; }
+
+        void setTopicRestricted(bool enabled) { this->_topicRestricted = enabled; }
 };

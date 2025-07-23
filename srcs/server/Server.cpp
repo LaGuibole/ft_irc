@@ -125,6 +125,7 @@ void Server::handleClientData(int clientFd)
     char buffer[1024];
     memset(buffer, 0, sizeof(buffer));
     ssize_t bytesRead = recv(clientFd, buffer, sizeof(buffer) - 1, 0);
+    std::cout << buffer << std::endl;
     if (bytesRead <= 0)
     {
         if (bytesRead == 0)

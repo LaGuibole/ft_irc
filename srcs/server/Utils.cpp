@@ -17,3 +17,10 @@ void Utils::sendError(Client* client, const std::string& code, const std::string
     texte += " " + message;
     client->reply(texte);  // Utiliser reply() au lieu de send() direct
 }
+
+std::string Utils::toString(int value)
+{
+    std::stringstream ss;
+    ss << value;
+    return ss.str();
+}
