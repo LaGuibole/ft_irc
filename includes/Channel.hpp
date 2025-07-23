@@ -4,6 +4,7 @@
 #include <map>
 #include <vector>
 #include "Client.hpp"
+#include "Numerics.hpp"
 #include "ChannelManager.hpp"
 
 class ChannelManager;
@@ -54,6 +55,8 @@ class Channel {
          * @return True si opérateur
          */
         bool isOperator(Client* client) const;
+
+        const std::map<int, Client*>& getOperators() const { return _operators; }
 
         /**
          * @brief Ajoute un operateur
@@ -119,4 +122,8 @@ class Channel {
         const std::string& getPassword() const { return _password; }
 
         void setTopicRestricted(bool enabled) { this->_topicRestricted = enabled; }
+
+        void sendNamesListTo(Client* client);
+
+        void sendNamesListToAll();
 };

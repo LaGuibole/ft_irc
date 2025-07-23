@@ -71,11 +71,14 @@ void CommandParser::process(int clientFd, const std::string& command,
         else if (cmd == "PART")
             handlePart(client, params, channelManager);
         else if (cmd == "PRIVMSG")
-            handlePrivmsg(client, command, clients, channelManager);
+            handlePrivmsg(client, command, clients, channelManager, server);
         else if (cmd == "INVITE")
             handleInvite(client, params, clients, channelManager);
         else if (cmd == "QUIT")
+        {
             handleQuit(client, command, channelManager, server);
+            return;
+        }
         else if (cmd == "KICK")
             handleKick(client, params, channelManager);
         else if (cmd == "MODE")
@@ -88,6 +91,11 @@ void CommandParser::process(int clientFd, const std::string& command,
         if (cmd != "PASS" && cmd != "NICK" && cmd != "USER" && cmd != "CAP")
             client->reply(":localhost " + std::string(ERR_NOTREGISTERED) + " :You have not registered");
     }
+
+    if (clients.find(clientFd) == clients.end())
+        return;
+    client = clients[clientFd];
+
     if (!client->isRegistered() &&
         client->isPassValidated() &&
         !client->getNickname().empty() &&
@@ -112,6 +120,9 @@ void CommandParser::process(int clientFd, const std::string& command,
         {
             client->setNickConflict(true);
         }
+        if (clients.find(clientFd) == clients.end())
+            return;
+        client = clients[clientFd];
     }
     if (!client->isRegistered() && client->hasNickConflict())
     {
@@ -143,6 +154,12 @@ void CommandParser::handleTopic(Client* client, const std::vector<std::string>& 
 		return;
 	}
 
+    if (channel->isTopicRestricted() && !channel->isOperator(client))
+    {
+        client->reply(":localhost " + std::string(ERR_CHANOPRIVSNEEDED) + " " + channel_name + " :You're not channel operator");
+        return ;
+    }
+
 	std::string new_topic;
 	if (params.size() >= 2) {
 		new_topic = params[1];
@@ -151,12 +168,6 @@ void CommandParser::handleTopic(Client* client, const std::vector<std::string>& 
 		if (!new_topic.empty() && new_topic[0] == ':')
 			new_topic = new_topic.substr(1);
 	}
-
-    if (channel->isTopicRestricted() && !channel->isOperator(client))
-    {
-        client->reply(":localhost " + std::string(ERR_CHANOPRIVSNEEDED) + " " + channel_name + " :You're not channel operator");
-        return ;
-    }
 
 	channel->setTopic(new_topic);
 	channel->broadcast(":" + client->getPrefix() + " TOPIC " + channel_name + " :" + new_topic);
@@ -337,7 +348,7 @@ void CommandParser::handlePart(Client* client, const std::vector<std::string>& p
     channel->removeMember(client, &channelManager);
 }
 
-void CommandParser::handlePrivmsg(Client* client, const std::string& command, const std::map<int, Client*>& clients, ChannelManager& channelManager)
+void CommandParser::handlePrivmsg(Client* client, const std::string& command, const std::map<int, Client*>& clients, ChannelManager& channelManager, Server& server)
 {
     std::vector<std::string> parts = split(command, ' ');
     if (parts.size() < 3)
@@ -347,6 +358,7 @@ void CommandParser::handlePrivmsg(Client* client, const std::string& command, co
     }
     std::string target = parts[1];
     std::string message = getMessage(command);
+
     if (message.empty())
     {
         client->reply(":localhost " + std::string(ERR_NOTEXTTOSEND) + " :No text to send");
@@ -362,6 +374,8 @@ void CommandParser::handlePrivmsg(Client* client, const std::string& command, co
             client->reply(":localhost " + std::string(ERR_NOSUCHCHANNEL) + " " + target + " :No such channel");
             return;
         }
+        if (!server.getBot().inspectMessages(client, message, channel, &channelManager))  // BOT INSPECTION
+            return ;
         if (!channel->isMember(client))
         {
             client->reply(":localhost " + std::string(ERR_CANNOTSENDTOCHAN) + " " + target + " :Cannot send to channel");
@@ -474,8 +488,8 @@ void CommandParser::handleKick(Client* client, const std::vector<std::string>& p
         return ;
     }
     std::string kickMessage = ":" + client->getPrefix() + " KICK " + channelName + " " + targetNick + " :" + comment;
-    target->reply(kickMessage);
     channel->broadcast(kickMessage, target);
+    target->reply(kickMessage);
     channel->removeMember(target, &channelManager);
 }
 
@@ -529,7 +543,7 @@ void CommandParser::applyChannelMode(Client* client, Channel* channel, const std
                 modeParamsStr += " " + targetNick;
                 break;
             }
-            case 'l':
+            case 'l': // TODO: Interdire les negatif et check l'int max
             {
                 if (adding)
                 {
@@ -539,6 +553,7 @@ void CommandParser::applyChannelMode(Client* client, Channel* channel, const std
                         return ;
                     }
                     int limit = atoi(modeParams[paramIndex++].c_str());
+                    limit = limit < 0 ? 0 : limit;
                     channel->setUserLimit(limit);
                     modeParamsStr += " " + Utils::toString(limit);
                 }
@@ -632,7 +647,7 @@ void CommandParser::handleMode(Client* client, const std::vector<std::string>& p
         return ;
     }
 
-    if (!channel->isOperator(client))
+    if (params.size() >= 2 && !channel->isOperator(client))
     {
         client->reply(":localhost " + std::string(ERR_CHANOPRIVSNEEDED) + " " + target + " :You're not channel operator");
         return ;

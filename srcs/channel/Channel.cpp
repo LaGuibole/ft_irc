@@ -168,3 +168,27 @@ void Channel::unsetPassword()
     _hasPassword = false;
     _password.clear();
 }
+
+void Channel::sendNamesListTo(Client* client)
+{
+    std::string names = ":localhost " + std::string(RPL_NAMREPLY) + " " + client->getNickname() + " = " + _name + " :";
+
+    for (std::map<int, Client*>::const_iterator it = _members.begin(); it != _members.end(); ++it)
+    {
+        if (isOperator(it->second))
+            names += "@" + it->second->getNickname() + " ";
+        else
+            names += it->second->getNickname() + " ";
+    }
+    client->reply(names);
+    client->reply(":localhost " + std::string(RPL_ENDOFNAMES) + " " + client->getNickname() + " " + _name + " :End of NAMES list");
+}
+
+void Channel::sendNamesListToAll()
+{
+    for (std::map<int, Client*>::const_iterator it = _members.begin(); it != _members.end(); ++it)
+    {
+        Client* member = it->second;
+        sendNamesListTo(member);
+    }
+}

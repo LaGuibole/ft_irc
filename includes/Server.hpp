@@ -7,6 +7,7 @@
 #include "Client.hpp"
 #include "ChannelManager.hpp"
 #include "CommandParser.hpp"
+#include "Bot.hpp"
 
 class CommandParser;
 
@@ -23,6 +24,7 @@ class Server {
         ChannelManager _channelManager;       /** Gestionnaire de channels */
         volatile bool _running;               /** Flag pour loop actif */
         static Server* _instance;             /** Instance unique (pour signals) */
+        Bot _bot;
 
         void setupServerSocket();
         void mainLoop();
@@ -67,4 +69,6 @@ class Server {
          * @param clientFd FD du iencli
          */
         void removeClient(int clientFd);
+
+        Bot& getBot() { return _bot; }
 };
