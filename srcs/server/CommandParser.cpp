@@ -71,7 +71,7 @@ void CommandParser::process(int clientFd, const std::string& command,
         else if (cmd == "PART")
             handlePart(client, params, channelManager);
         else if (cmd == "PRIVMSG")
-            handlePrivmsg(client, command, clients, channelManager);
+            handlePrivmsg(client, command, clients, channelManager, server);
         else if (cmd == "INVITE")
             handleInvite(client, params, clients, channelManager);
         else if (cmd == "QUIT")
@@ -154,6 +154,12 @@ void CommandParser::handleTopic(Client* client, const std::vector<std::string>& 
 		return;
 	}
 
+    if (channel->isTopicRestricted() && !channel->isOperator(client))
+    {
+        client->reply(":localhost " + std::string(ERR_CHANOPRIVSNEEDED) + " " + channel_name + " :You're not channel operator");
+        return ;
+    }
+
 	std::string new_topic;
 	if (params.size() >= 2) {
 		new_topic = params[1];
@@ -162,12 +168,6 @@ void CommandParser::handleTopic(Client* client, const std::vector<std::string>& 
 		if (!new_topic.empty() && new_topic[0] == ':')
 			new_topic = new_topic.substr(1);
 	}
-
-    if (channel->isTopicRestricted() && !channel->isOperator(client))
-    {
-        client->reply(":localhost " + std::string(ERR_CHANOPRIVSNEEDED) + " " + channel_name + " :You're not channel operator");
-        return ;
-    }
 
 	channel->setTopic(new_topic);
 	channel->broadcast(":" + client->getPrefix() + " TOPIC " + channel_name + " :" + new_topic);
@@ -348,7 +348,7 @@ void CommandParser::handlePart(Client* client, const std::vector<std::string>& p
     channel->removeMember(client, &channelManager);
 }
 
-void CommandParser::handlePrivmsg(Client* client, const std::string& command, const std::map<int, Client*>& clients, ChannelManager& channelManager)
+void CommandParser::handlePrivmsg(Client* client, const std::string& command, const std::map<int, Client*>& clients, ChannelManager& channelManager, Server& server)
 {
     std::vector<std::string> parts = split(command, ' ');
     if (parts.size() < 3)
@@ -358,6 +358,7 @@ void CommandParser::handlePrivmsg(Client* client, const std::string& command, co
     }
     std::string target = parts[1];
     std::string message = getMessage(command);
+
     if (message.empty())
     {
         client->reply(":localhost " + std::string(ERR_NOTEXTTOSEND) + " :No text to send");
@@ -373,6 +374,8 @@ void CommandParser::handlePrivmsg(Client* client, const std::string& command, co
             client->reply(":localhost " + std::string(ERR_NOSUCHCHANNEL) + " " + target + " :No such channel");
             return;
         }
+        if (!server.getBot().inspectMessages(client, message, channel, &channelManager))  // BOT INSPECTION
+            return ;
         if (!channel->isMember(client))
         {
             client->reply(":localhost " + std::string(ERR_CANNOTSENDTOCHAN) + " " + target + " :Cannot send to channel");
@@ -486,8 +489,8 @@ void CommandParser::handleKick(Client* client, const std::vector<std::string>& p
     }
     std::string kickMessage = ":" + client->getPrefix() + " KICK " + channelName + " " + targetNick + " :" + comment;
     target->reply(kickMessage);
-    channel->broadcast(kickMessage, target);
     channel->removeMember(target, &channelManager);
+    channel->broadcast(kickMessage, target);
 }
 
 void CommandParser::applyChannelMode(Client* client, Channel* channel, const std::string& modeFlags, std::vector<std::string>& modeParams)
@@ -608,7 +611,7 @@ void CommandParser::applyChannelMode(Client* client, Channel* channel, const std
 
 void CommandParser::handleMode(Client* client, const std::vector<std::string>& params, ChannelManager& channelManager)
 {
-    if (params.empty())
+    if (params.empty()) // a fix
     {
         client->reply(":localhost " + std::string(ERR_NEEDMOREPARAMS) + " MODE :Not enough parameters");
         return ;

@@ -20,6 +20,7 @@ OBJ_DIR     := build
 INC_DIR     := includes
 
 SRCS        := \
+	srcs/Bot.cpp \
 	srcs/channel/Channel.cpp \
 	srcs/client/Client.cpp \
 	srcs/main.cpp \
