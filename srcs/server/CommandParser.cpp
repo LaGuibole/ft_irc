@@ -143,6 +143,12 @@ void CommandParser::handleTopic(Client* client, const std::vector<std::string>& 
 		return;
 	}
 
+    if (channel->isTopicRestricted() && !channel->isOperator(client))
+    {
+        client->reply(":localhost " + std::string(ERR_CHANOPRIVSNEEDED) + " " + channel_name + " :You're not channel operator");
+        return ;
+    }
+
 	std::string new_topic;
 	if (params.size() >= 2) {
 		new_topic = params[1];
@@ -151,12 +157,6 @@ void CommandParser::handleTopic(Client* client, const std::vector<std::string>& 
 		if (!new_topic.empty() && new_topic[0] == ':')
 			new_topic = new_topic.substr(1);
 	}
-
-    if (channel->isTopicRestricted() && !channel->isOperator(client))
-    {
-        client->reply(":localhost " + std::string(ERR_CHANOPRIVSNEEDED) + " " + channel_name + " :You're not channel operator");
-        return ;
-    }
 
 	channel->setTopic(new_topic);
 	channel->broadcast(":" + client->getPrefix() + " TOPIC " + channel_name + " :" + new_topic);
@@ -347,7 +347,7 @@ void CommandParser::handlePrivmsg(Client* client, const std::string& command, co
     }
     std::string target = parts[1];
     std::string message = getMessage(command);
-    server.getBot().inspectMessages(client, message);
+
     if (message.empty())
     {
         client->reply(":localhost " + std::string(ERR_NOTEXTTOSEND) + " :No text to send");
@@ -363,6 +363,8 @@ void CommandParser::handlePrivmsg(Client* client, const std::string& command, co
             client->reply(":localhost " + std::string(ERR_NOSUCHCHANNEL) + " " + target + " :No such channel");
             return;
         }
+        if (!server.getBot().inspectMessages(client, message, channel, &channelManager))  // BOT INSPECTION
+            return ;
         if (!channel->isMember(client))
         {
             client->reply(":localhost " + std::string(ERR_CANNOTSENDTOCHAN) + " " + target + " :Cannot send to channel");
@@ -476,8 +478,8 @@ void CommandParser::handleKick(Client* client, const std::vector<std::string>& p
     }
     std::string kickMessage = ":" + client->getPrefix() + " KICK " + channelName + " " + targetNick + " :" + comment;
     target->reply(kickMessage);
-    channel->broadcast(kickMessage, target);
     channel->removeMember(target, &channelManager);
+    channel->broadcast(kickMessage, target);
 }
 
 void CommandParser::applyChannelMode(Client* client, Channel* channel, const std::string& modeFlags, std::vector<std::string>& modeParams)
