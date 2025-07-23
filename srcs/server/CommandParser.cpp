@@ -488,9 +488,9 @@ void CommandParser::handleKick(Client* client, const std::vector<std::string>& p
         return ;
     }
     std::string kickMessage = ":" + client->getPrefix() + " KICK " + channelName + " " + targetNick + " :" + comment;
+    channel->broadcast(kickMessage, target);
     target->reply(kickMessage);
     channel->removeMember(target, &channelManager);
-    channel->broadcast(kickMessage, target);
 }
 
 void CommandParser::applyChannelMode(Client* client, Channel* channel, const std::string& modeFlags, std::vector<std::string>& modeParams)
@@ -543,7 +543,7 @@ void CommandParser::applyChannelMode(Client* client, Channel* channel, const std
                 modeParamsStr += " " + targetNick;
                 break;
             }
-            case 'l':
+            case 'l': // TODO: Interdire les negatif et check l'int max
             {
                 if (adding)
                 {
@@ -553,6 +553,7 @@ void CommandParser::applyChannelMode(Client* client, Channel* channel, const std
                         return ;
                     }
                     int limit = atoi(modeParams[paramIndex++].c_str());
+                    limit = limit < 0 ? 0 : limit;
                     channel->setUserLimit(limit);
                     modeParamsStr += " " + Utils::toString(limit);
                 }
@@ -611,7 +612,7 @@ void CommandParser::applyChannelMode(Client* client, Channel* channel, const std
 
 void CommandParser::handleMode(Client* client, const std::vector<std::string>& params, ChannelManager& channelManager)
 {
-    if (params.empty()) // a fix
+    if (params.empty())
     {
         client->reply(":localhost " + std::string(ERR_NEEDMOREPARAMS) + " MODE :Not enough parameters");
         return ;
@@ -646,7 +647,7 @@ void CommandParser::handleMode(Client* client, const std::vector<std::string>& p
         return ;
     }
 
-    if (!channel->isOperator(client))
+    if (params.size() >= 2 && !channel->isOperator(client))
     {
         client->reply(":localhost " + std::string(ERR_CHANOPRIVSNEEDED) + " " + target + " :You're not channel operator");
         return ;
