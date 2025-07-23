@@ -135,9 +135,15 @@ void Server::handleClientData(int clientFd)
         removeClient(clientFd);
         return;
     }
-    Client* client = _clients[clientFd];
-    if (client)
-        client->appendToBuffer(std::string(buffer));
+
+    std::map<int, Client*>::iterator clientIt = _clients.find(clientFd);
+    if (clientIt == _clients.end()) {
+        std::cerr << "Client " << clientFd << " not found after recv" << std::endl;
+        return;
+    }
+
+    Client* client = clientIt->second;
+    client->appendToBuffer(std::string(buffer));
     std::string& buf = client->getBuffer();
     size_t pos = 0;
     static std::map<int, int> realErrorCounts;
@@ -177,7 +183,15 @@ void Server::handleClientData(int clientFd)
         }
 
 		CommandParser::process(clientFd, command, _clients, _channelManager, _password, *this);
-		client->eraseFromBuffer(0, pos + 2);
+        clientIt = _clients.find(clientFd);
+        if (clientIt == _clients.end()) {
+            // Client supprimé (QUIT ou disconnect) - nettoyer et sortir
+            realErrorCounts.erase(clientFd);
+            lastNickAttempt.erase(clientFd);
+            return;
+        }
+        client = clientIt->second;
+        client->eraseFromBuffer(0, pos + 2);
 		if (client->shouldDisconnect())
 		{
 			std::cout << "[DEBUG] Client marked for disconnection due to nickname conflict" << std::endl;

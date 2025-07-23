@@ -75,7 +75,10 @@ void CommandParser::process(int clientFd, const std::string& command,
         else if (cmd == "INVITE")
             handleInvite(client, params, clients, channelManager);
         else if (cmd == "QUIT")
+        {
             handleQuit(client, command, channelManager, server);
+            return;
+        }
         else if (cmd == "KICK")
             handleKick(client, params, channelManager);
         else if (cmd == "MODE")
@@ -88,6 +91,11 @@ void CommandParser::process(int clientFd, const std::string& command,
         if (cmd != "PASS" && cmd != "NICK" && cmd != "USER" && cmd != "CAP")
             client->reply(":localhost " + std::string(ERR_NOTREGISTERED) + " :You have not registered");
     }
+
+    if (clients.find(clientFd) == clients.end())
+        return;
+    client = clients[clientFd];
+
     if (!client->isRegistered() &&
         client->isPassValidated() &&
         !client->getNickname().empty() &&
@@ -112,6 +120,9 @@ void CommandParser::process(int clientFd, const std::string& command,
         {
             client->setNickConflict(true);
         }
+        if (clients.find(clientFd) == clients.end())
+            return;
+        client = clients[clientFd];
     }
     if (!client->isRegistered() && client->hasNickConflict())
     {
